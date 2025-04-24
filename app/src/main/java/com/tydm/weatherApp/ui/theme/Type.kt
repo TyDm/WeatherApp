@@ -1,4 +1,4 @@
-package com.tydm.WeatherApp.ui.theme
+package com.tydm.weatherApp.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
