@@ -1,6 +1,5 @@
-package com.tydm.myapplication.ui.theme
+package com.tydm.WeatherApp.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
