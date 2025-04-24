@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.tydm.myapplication"
+    namespace = "com.tydm.weatherApp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.tydm.myapplication"
+        applicationId = "com.tydm.weatherApp"
         minSdk = 28
         targetSdk = 35
         versionCode = 1
