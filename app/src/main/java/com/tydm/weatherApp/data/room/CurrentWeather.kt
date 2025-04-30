@@ -2,6 +2,7 @@ package com.tydm.weatherApp.data.room
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.util.Date
 
 @Entity(tableName = "current_weather")
 data class CurrentWeather(
@@ -9,10 +10,10 @@ data class CurrentWeather(
     val cityId: Int,
     val cityName: String,
     val gmtOffset: Int,
-    val updateTime: Long,
+    val updateTime: Date,
     val country: String,
     val region: String,
-    val temp: Float,
+    val temperature: Float,
     val feelsLikeTemp: Float,
     val humidity: Int,
     val windMs: Int,

@@ -1,6 +1,7 @@
 package com.tydm.weatherApp.data.weatherapi
 
 
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -12,7 +13,7 @@ interface WeatherApi {
         @Query("lang") lang: String = "ru",
         @Query("aqi") aqi: String = "no",
         @Query("alerts") alerts: String = "no"
-    ): ForecastWeatherResponse
+    ): Response<ForecastWeatherResponse>
 
     @GET(SEARCH_URL)
     suspend fun searchCityByName(

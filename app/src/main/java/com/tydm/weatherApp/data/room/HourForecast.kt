@@ -9,5 +9,6 @@ data class HourForecast(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val cityId: Int,
     val time: Date,
-    val temp: Float
+    val temperature: Float
+
 )
