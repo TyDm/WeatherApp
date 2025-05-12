@@ -19,6 +19,9 @@ data class HourlyForecastResponseItem(
     @field:SerializedName("DateTime")
     val dateTime: String? = null,
 
+    @field:SerializedName("IconPhrase")
+    val iconPhrase: String? = null,
+
     @field:SerializedName("WeatherIcon")
     val weatherIcon: Int? = null,
 
