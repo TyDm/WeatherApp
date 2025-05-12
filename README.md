@@ -10,7 +10,7 @@ Android приложение для просмотра погоды, испол�
 
 1. Получите API ключ на [AccuWeather API](https://developer.accuweather.com/)
 2. Откройте файл `local.properties`
-3. Добавьте в конец файла ACCUWEATHER_API_KEY=`your_api_key_here`
+3. Добавьте в конец файла:
 
 ```properties
 ACCUWEATHER_API_KEY=your_api_key_here
