@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,7 +8,33 @@ plugins {
     id("androidx.room")
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    id("com.android.internal.application")
 }
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(FileInputStream(localPropertiesFile))
+    }
+}
+
+fun getLocalProperty(key: String, defaultValue: String = ""): String {
+    return localProperties.getProperty(key) ?: defaultValue
+}
+
+fun checkProperty(key: String) {
+    val value = getLocalProperty(key)
+    if (value.isBlank()) {
+        throw GradleException(
+            """
+            $key not found in local.properties. 
+            Please check local.properties.example and add required properties to local.properties
+            """.trimIndent()
+        )
+    }
+}
+
+checkProperty("ACCUWEATHER_API_KEY")
 
 android {
     namespace = "com.tydm.weatherApp"
@@ -19,6 +48,14 @@ android {
         versionName = "0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "API_KEY", "\"${getLocalProperty("ACCUWEATHER_API_KEY")}\"")
+        buildConfigField("String", "BASE_URL", "\"${getLocalProperty("ACCUWEATHER_BASE_URL")}\"")
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
     }
 
     buildTypes {
@@ -29,6 +66,9 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isDebuggable = true
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -36,9 +76,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
     }
     room {
         schemaDirectory("$projectDir/schemas")
@@ -80,4 +117,22 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    implementation(libs.logging.interceptor)
+    implementation(libs.okhttp)
+
+    // Testing
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+    testImplementation(libs.truth)
+    
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }

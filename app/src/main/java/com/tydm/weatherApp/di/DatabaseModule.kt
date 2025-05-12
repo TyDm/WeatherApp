@@ -2,7 +2,8 @@ package com.tydm.weatherApp.di
 
 import android.content.Context
 import androidx.room.Room
-import com.tydm.weatherApp.data.room.WeatherDatabase
+import com.tydm.weatherApp.data.local.WeatherDatabase
+import com.tydm.weatherApp.data.local.dao.WeatherDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,11 +14,14 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): WeatherDatabase {
+    fun provideWeatherDatabase(
+        @ApplicationContext context: Context
+    ): WeatherDatabase {
         return Room.databaseBuilder(
-            context.applicationContext,
+            context,
             WeatherDatabase::class.java,
             "weather_database"
         ).build()
@@ -25,5 +29,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideWeatherDao(database: WeatherDatabase) = database.getWeatherDao()
+    fun provideWeatherDao(database: WeatherDatabase): WeatherDao {
+        return database.weatherDao()
+    }
 }
