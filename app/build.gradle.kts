@@ -50,7 +50,19 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "API_KEY", "\"${getLocalProperty("ACCUWEATHER_API_KEY")}\"")
-        buildConfigField("String", "BASE_URL", "\"${getLocalProperty("ACCUWEATHER_BASE_URL")}\"")
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.systemProperty("java.awt.headless", "true")
+                it.systemProperty("file.encoding", "UTF-8")
+                it.systemProperty("user.language", "en")
+                it.systemProperty("user.country", "US")
+                it.jvmArgs("-XX:+EnableDynamicAgentLoading")
+            }
+        }
     }
 
     buildFeatures {
