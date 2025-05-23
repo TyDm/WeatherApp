@@ -14,3 +14,11 @@
 .cxx
 local.properties
 .idea/
+
+# Log files
+*.log
+errors-*.log
+
+# Test JSON files
+*.json
+!app/src/main/assets/*.json
