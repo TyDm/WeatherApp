@@ -13,4 +13,4 @@
     <string name="error_server">Server error: %1$s</string>
     <string name="error_database">Database error</string>
     <string name="error_unknown">Unknown error</string>
-</resources>
+</resources> 
