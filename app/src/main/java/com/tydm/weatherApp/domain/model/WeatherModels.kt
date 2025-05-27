@@ -1,7 +1,7 @@
 package com.tydm.weatherApp.domain.model
 
 data class Weather(
-    val id: Int = 0,
+    val id: Long = 0,
     val cityId: Int,
     val observationTime: Long,
     val updateTime: Long = System.currentTimeMillis(),
@@ -28,7 +28,7 @@ data class City(
 )
 
 data class DailyForecast(
-    val id: Int = 0,
+    val id: Long = 0,
     val cityId: Int,
     val date: Long,
     val temperatureMinImperial: Int,
@@ -41,7 +41,7 @@ data class DailyForecast(
 )
 
 data class HourlyForecast(
-    val id: Int = 0,
+    val id: Long = 0,
     val cityId: Int,
     val dateTime: Long,
     val temperatureMetric: Float,

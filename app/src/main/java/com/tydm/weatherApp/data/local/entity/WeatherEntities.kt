@@ -29,7 +29,7 @@ data class CityEntity(
 )
 data class WeatherEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Long = 0,
     val cityId: Int,
     val observationTime: Long,
     val updateTime: Long = System.currentTimeMillis(),
@@ -59,7 +59,7 @@ data class WeatherEntity(
 )
 data class DailyForecastEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Long = 0,
     val cityId: Int,
     val date: Long,
     val temperatureMinImperial: Int,
@@ -84,7 +84,7 @@ data class DailyForecastEntity(
 )
 data class HourlyForecastEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Long = 0,
     val cityId: Int,
     val dateTime: Long,
     val temperatureMetric: Float,
