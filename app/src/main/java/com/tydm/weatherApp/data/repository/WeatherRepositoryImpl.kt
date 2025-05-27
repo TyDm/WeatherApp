@@ -70,10 +70,12 @@ class WeatherRepositoryImpl @Inject constructor(
         return try {
             val dailyForecast = weatherApi.getDailyForecast(locationKey, language).body()
                 ?: throw IllegalStateException("Empty daily forecast response")
+            weatherDao.deleteDailyForecast(cityId)
             weatherDao.insertDailyForecast(dailyForecast.toDailyForecastEntityList(cityId))
             val currentWeather =
                 weatherApi.getCurrentWeather(locationKey, language).body()
                     ?: throw IllegalStateException("Empty weather response")
+            weatherDao.deleteWeather(cityId)
             weatherDao.insertWeather(
                 currentWeather.toWeatherEntity(
                     cityId,
@@ -83,6 +85,7 @@ class WeatherRepositoryImpl @Inject constructor(
             val hourlyForecast =
                 weatherApi.getHourlyForecast(locationKey, language).body()
                     ?: throw IllegalStateException("Empty hourly forecast response")
+            weatherDao.deleteHourlyForecast(cityId)
             weatherDao.insertHourlyForecast(hourlyForecast.toHourlyForecastEntityList(cityId))
 
             WeatherResult.Success(Unit)
