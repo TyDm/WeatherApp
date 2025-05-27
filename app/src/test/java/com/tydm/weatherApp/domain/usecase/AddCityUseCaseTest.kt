@@ -25,14 +25,13 @@ class AddCityUseCaseTest {
     fun `invoke returns success when repository succeeds`() = runTest {
         // Given
         val locationKey = "123456"
-        val language = "ru"
         coEvery { 
-            repository.addCity(locationKey, language) 
+            repository.addCity(locationKey)
         } returns WeatherResult.Success(Unit)
-        
+
         // When
-        val result = useCase(locationKey, language)
-        
+        val result = useCase(locationKey)
+
         // Then
         assertThat(result).isInstanceOf(WeatherResult.Success::class.java)
     }
@@ -41,14 +40,13 @@ class AddCityUseCaseTest {
     fun `invoke returns error when repository fails`() = runTest {
         // Given
         val locationKey = "123456"
-        val language = "ru"
         val error = WeatherError.NetworkError(Exception("Network error"))
         coEvery { 
-            repository.addCity(locationKey, language) 
+            repository.addCity(locationKey)
         } returns WeatherResult.Error(error)
         
         // When
-        val result = useCase(locationKey, language)
+        val result = useCase(locationKey)
         
         // Then
         assertThat(result).isInstanceOf(WeatherResult.Error::class.java)

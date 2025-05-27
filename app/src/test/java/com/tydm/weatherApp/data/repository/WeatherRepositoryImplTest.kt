@@ -9,6 +9,7 @@ import com.tydm.weatherApp.data.mapper.toDailyForecastEntityList
 import com.tydm.weatherApp.data.mapper.toEntity
 import com.tydm.weatherApp.data.mapper.toHourlyForecastEntityList
 import com.tydm.weatherApp.data.mapper.toWeatherEntity
+import com.tydm.weatherApp.data.weatherapi.AccuWeatherLanguages
 import com.tydm.weatherApp.data.weatherapi.AccuweatherApi
 import com.tydm.weatherApp.data.weatherapi.AdministrativeAreaInfo
 import com.tydm.weatherApp.data.weatherapi.CityCountry
@@ -47,12 +48,14 @@ class WeatherRepositoryImplTest {
     private lateinit var weatherDao: WeatherDao
     private lateinit var weatherApi: AccuweatherApi
     private lateinit var repository: WeatherRepositoryImpl
+    private lateinit var weatherLanguage: AccuWeatherLanguages
 
     @Before
     fun setup() {
         weatherDao = mockk(relaxed = true)
-        weatherApi = mockk(relaxed = true)
-        repository = WeatherRepositoryImpl(weatherDao, weatherApi)
+        weatherApi = mockk()
+        weatherLanguage = mockk(relaxed = true)
+        repository = WeatherRepositoryImpl(weatherDao, weatherApi, weatherLanguage)
 
     }
 
@@ -60,7 +63,7 @@ class WeatherRepositoryImplTest {
     fun `addCity success`() = runTest {
 
         val locationKey = "12345678"
-        val language = "ru"
+        val language = "en"
         val cityResponse = CityResponse(
             key = "12345678",
             type = "City",
@@ -112,10 +115,11 @@ class WeatherRepositoryImplTest {
 
             )
         )
+        coEvery { weatherLanguage.language } returns language
         coEvery {
             weatherApi.getCityInfoByLocationKey(locationKey, language).body()
         } returns cityResponse
-        coEvery { weatherDao.insertCity(cityResponse.toEntity()) } returns 1L
+        coEvery { weatherDao.insertCity(cityResponse.toEntity("en")) } returns 1L
         coEvery {
             weatherApi.getDailyForecast(locationKey, language).body()
         } returns dailyForecastResponse
@@ -137,27 +141,25 @@ class WeatherRepositoryImplTest {
         coEvery { weatherDao.insertHourlyForecast(listHourlyForecast.toHourlyForecastEntityList(1)) } returns Unit
 
 
-        val result = repository.addCity(locationKey, language)
+        val result = repository.addCity(locationKey)
 
 
-        assertThat(result).isInstanceOf(
-            WeatherResult.Success::
-            class.java
-        )
+        assertThat(result).isInstanceOf(WeatherResult.Success::class.java)
     }
 
     @Test
     fun `addCity network error`() = runTest {
 
         val locationKey = "123456"
-        val language = "ru"
+        val language = "en"
 
+        coEvery { weatherLanguage.language } returns language
         coEvery {
             weatherApi.getCityInfoByLocationKey(locationKey, language)
         } throws IOException()
 
 
-        val result = repository.addCity(locationKey, language)
+        val result = repository.addCity(locationKey)
 
 
         assertThat(result).isInstanceOf(WeatherResult.Error::class.java)
@@ -218,30 +220,30 @@ class WeatherRepositoryImplTest {
 
     @Test
     fun `updateWeather returns api error on 404`() = runTest {
-
         val cityId = 1
-        val language = "ru"
+        val language = "en"
         val cityEntity = CityEntity(
             id = cityId,
             locationKey = "123456",
             name = "Moscow",
             country = "Russia",
             administrativeArea = "Moscow",
-            gmtOffset = 3
+            gmtOffset = 3,
+            languageCode = "en"
         )
 
         coEvery { weatherDao.getCityById(cityId) } returns cityEntity
+        coEvery { weatherLanguage.language } returns language
 
+        val response = retrofit2.Response.error<Any>(
+            404,
+            "Not Found".toResponseBody(null)
+        )
         coEvery {
             weatherApi.getDailyForecast(cityEntity.locationKey, language)
-        } throws HttpException(
-            retrofit2.Response.error<Any>(
-                404,
-                "Not Found".toResponseBody(null)
-            )
-        )
+        } throws HttpException(response)
 
-        val result = repository.updateWeather(cityId, language)
+        val result = repository.updateWeather(cityId)
 
         assertThat(result).isInstanceOf(WeatherResult.Error::class.java)
         assertThat((result as WeatherResult.Error).error)
