@@ -7,6 +7,6 @@ import javax.inject.Inject
 class AddCityUseCase @Inject constructor(
     private val repository: WeatherRepository
 ) {
-    suspend operator fun invoke(locationKey: String, language: String): WeatherResult<Unit> =
-        repository.addCity(locationKey, language)
+    suspend operator fun invoke(locationKey: String): WeatherResult<Unit> =
+        repository.addCity(locationKey)
 } 

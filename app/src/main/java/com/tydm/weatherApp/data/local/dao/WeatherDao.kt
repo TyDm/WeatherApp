@@ -13,6 +13,9 @@ interface WeatherDao {
     @Query("DELETE FROM cities WHERE id = :id")
     suspend fun deleteCity(id: Int)
 
+    @Update
+    suspend fun updateCity(city: CityEntity)
+
     @Query("SELECT * FROM cities")
     fun getCities(): Flow<List<CityEntity>>
 

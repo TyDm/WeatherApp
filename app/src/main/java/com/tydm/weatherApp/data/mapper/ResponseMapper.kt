@@ -13,7 +13,7 @@ import kotlin.math.roundToInt
 private fun imperialTempToMetricInt(value: Double): Int = ((value - 32) / 1.8).roundToInt()
 private fun imperialTempToMetricFloat(value: Double): Float = ((value - 32) / 1.8).toFloat()
 
-fun CityResponse.toEntity(): CityEntity =
+fun CityResponse.toEntity(languageCode: String): CityEntity =
     if (key != null &&
         localizedName != null &&
         country?.localizedName != null &&
@@ -25,9 +25,13 @@ fun CityResponse.toEntity(): CityEntity =
             name = localizedName,
             country = country.localizedName,
             administrativeArea = administrativeArea.localizedName,
-            gmtOffset = timeZone.gmtOffset
+            gmtOffset = timeZone.gmtOffset,
+            languageCode = languageCode
         )
     else throw IllegalStateException("Invalid city response")
+
+fun CityResponse.toEntity(languageCode: String, id: Int): CityEntity =
+    toEntity(languageCode).copy(id = id)
 
 fun List<CurrentWeatherItem>.toWeatherEntity(cityId: Int, atmPrecipitation: Int): WeatherEntity {
     val currentWeatherItem = firstOrNull() ?: throw IllegalStateException("Empty weather response")
@@ -66,7 +70,7 @@ fun List<CurrentWeatherItem>.toWeatherEntity(cityId: Int, atmPrecipitation: Int)
 
 fun DailyForecastResponse.toDailyForecastEntityList(cityId: Int): List<DailyForecastEntity> {
     if (dailyForecasts.isNullOrEmpty()) throw IllegalStateException("Invalid daily forecast response")
-    
+
     return dailyForecasts.mapNotNull { forecastItem ->
         if (forecastItem?.epochDate != null &&
             forecastItem.temperature?.minimum?.value != null &&
