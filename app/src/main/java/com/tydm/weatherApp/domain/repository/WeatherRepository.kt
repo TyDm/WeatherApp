@@ -9,7 +9,7 @@ interface WeatherRepository {
     suspend fun updateWeather(cityId: Int): WeatherResult<Unit>
 
     fun getCities(): Flow<WeatherResult<List<City>>>
-    fun getCurrentWeather(cityId: Int): Flow<WeatherResult<Weather?>>
+    fun getCurrentWeather(cityId: Int): Flow<WeatherResult<Weather>>
     fun getDailyForecast(cityId: Int): Flow<WeatherResult<List<DailyForecast>>>
     fun getHourlyForecast(cityId: Int): Flow<WeatherResult<List<HourlyForecast>>>
 } 
