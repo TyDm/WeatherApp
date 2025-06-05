@@ -116,15 +116,13 @@ class WeatherRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getCurrentWeather(cityId: Int): Flow<WeatherResult<Weather>> = flow {
+    override fun getCurrentWeather(cityId: Int): Flow<WeatherResult<Weather?>> = flow {
         emit(WeatherResult.Loading)
         try {
             weatherDao.getWeather(cityId)
                 .map { entity -> entity?.toDomain() }
                 .collect { weather ->
-                    if (weather != null)
-                        emit(WeatherResult.Success(weather))
-                    else emit(WeatherResult.Error(WeatherError.DatabaseError(Exception("Database error"))))
+                    emit(WeatherResult.Success(weather))
                 }
         } catch (e: Exception) {
             emit(WeatherResult.Error(WeatherError.DatabaseError(e)))

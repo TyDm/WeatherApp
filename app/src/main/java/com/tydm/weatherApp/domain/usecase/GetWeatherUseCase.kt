@@ -15,7 +15,7 @@ class GetWeatherUseCase @Inject constructor(
     fun getCities(): Flow<WeatherResult<List<City>>> = 
         repository.getCities()
     
-    fun getCurrentWeather(cityId: Int): Flow<WeatherResult<Weather>> =
+    fun getCurrentWeather(cityId: Int): Flow<WeatherResult<Weather?>> =
         repository.getCurrentWeather(cityId)
     
     fun getDailyForecast(cityId: Int): Flow<WeatherResult<List<DailyForecast>>> =
