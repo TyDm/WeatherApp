@@ -2,33 +2,35 @@ package com.tydm.weatherApp.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.tydm.weatherApp.R
 
-// Set of Material typography styles to start with
+val montFamily = FontFamily(
+    Font(R.font.mont_semibold)
+)
+
 val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
+    headlineMedium = TextStyle(
+        fontFamily = montFamily,
+        fontSize = 48.sp,
+        color = WhiteText
     ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+    headlineLarge = TextStyle(
+        fontFamily = montFamily,
+        fontSize = 128.sp,
+        lineHeight = 128.sp,
+        color = WhiteText
+    ),
+    bodySmall = TextStyle(
+        fontFamily = montFamily,
+        fontSize = 16.sp,
+        color = WhiteText
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = montFamily,
+        fontSize = 20.sp,
+        color = WhiteText
     )
-    */
 )

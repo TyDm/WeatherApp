@@ -13,4 +13,9 @@
     <string name="error_server">Ошибка сервера: %1$s</string>
     <string name="error_database">Ошибка базы данных</string>
     <string name="error_unknown">Неизвестная ошибка</string>
+    <string name="feels_like">Ощущается как</string>
+    <string name="wind">Ветер</string>
+    <string name="humidity">Влажность</string>
+    <string name="precipitation">Осадки</string>
+    <string name="speed_ms">м/с</string>
 </resources> 

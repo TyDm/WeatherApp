@@ -13,4 +13,10 @@
     <string name="error_server">Server error: %1$s</string>
     <string name="error_database">Database error</string>
     <string name="error_unknown">Unknown error</string>
+    <!-- Display text -->
+    <string name="feels_like">Feels like</string>
+    <string name="wind">Wind</string>
+    <string name="humidity">Humidity</string>
+    <string name="precipitation">Precipitation</string>
+    <string name="speed_ms">m/s</string>
 </resources>
