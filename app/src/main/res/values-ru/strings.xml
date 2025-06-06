@@ -4,15 +4,10 @@
     
     <!-- Error messages -->
     <string name="error_network">Проверьте подключение к интернету</string>
-    <string name="error_api_400">Неверный запрос: проверьте правильность параметров</string>
-    <string name="error_api_401">Ошибка авторизации: неверный API ключ</string>
-    <string name="error_api_403">Доступ запрещен: недостаточно прав</string>
-    <string name="error_api_404">Данные не найдены</string>
-    <string name="error_api_429">Превышен лимит запросов</string>
-    <string name="error_api_500">Ошибка сервера. Попробуйте позже</string>
-    <string name="error_server">Ошибка сервера: %1$s</string>
+    <string name="error_api">Произошла ошибка загрузки данных с сервера. \nКод ошибки:  %1$s</string>
     <string name="error_database">Ошибка базы данных</string>
     <string name="error_unknown">Неизвестная ошибка</string>
+    <string name="error_loading">Произошла ошибка при загрузке данных. \nПопробуйте обновить страницу</string>
     <string name="feels_like">Ощущается как</string>
     <string name="wind">Ветер</string>
     <string name="humidity">Влажность</string>

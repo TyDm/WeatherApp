@@ -4,15 +4,10 @@
     
     <!-- Error messages -->
     <string name="error_network">Check your internet connection</string>
-    <string name="error_api_400">Invalid request: check the parameters</string>
-    <string name="error_api_401">Authorization error: invalid API key</string>
-    <string name="error_api_403">Access denied: insufficient permissions</string>
-    <string name="error_api_404">Data not found</string>
-    <string name="error_api_429">Request limit exceeded</string>
-    <string name="error_api_500">Server error. Please try again later</string>
-    <string name="error_server">Server error: %1$s</string>
+    <string name="error_api">There was an error loading data from the server. \nError code: %1$s</string>
     <string name="error_database">Database error</string>
     <string name="error_unknown">Unknown error</string>
+    <string name="error_loading">There was an error loading data. \nTry refreshing the page.</string>
     <string name="feels_like">Feels like</string>
     <string name="wind">Wind</string>
     <string name="humidity">Humidity</string>
