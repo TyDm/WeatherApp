@@ -12,25 +12,31 @@ val montFamily = FontFamily(
 )
 
 val Typography = Typography(
-    headlineMedium = TextStyle(
-        fontFamily = montFamily,
-        fontSize = 48.sp,
-        color = WhiteText
-    ),
     headlineLarge = TextStyle(
         fontFamily = montFamily,
         fontSize = 128.sp,
         lineHeight = 128.sp,
         color = WhiteText
     ),
-    bodySmall = TextStyle(
+    headlineMedium = TextStyle(
+        fontFamily = montFamily,
+        fontSize = 48.sp,
+        color = WhiteText
+    ),
+    headlineSmall = TextStyle(
+        fontFamily = montFamily,
+        fontSize = 20.sp,
+        color = WhiteText
+    ),
+    bodyLarge = TextStyle(
         fontFamily = montFamily,
         fontSize = 16.sp,
         color = WhiteText
     ),
     bodyMedium = TextStyle(
         fontFamily = montFamily,
-        fontSize = 20.sp,
+        fontSize = 12.sp,
+        lineHeight = 24.sp,
         color = WhiteText
     )
 )

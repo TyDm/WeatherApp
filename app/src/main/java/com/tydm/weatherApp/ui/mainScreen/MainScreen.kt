@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,23 +17,21 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -61,8 +58,22 @@ fun MainScreen(
     val state by viewModel.state.collectAsState()
     val pagerState = rememberPagerState { state.cities.size }
     val pullToRefreshState = rememberPullToRefreshState()
+    val snackBarHostState = remember { SnackbarHostState() }
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState)}
+    ) { paddingValues ->
+        LaunchedEffect(state.error) {
+            if (state.error != null) {
+                val result = snackBarHostState.showSnackbar(
+                    message = state.error.toString(),
+                    withDismissAction = true)
+                when (result) {
+                    SnackbarResult.ActionPerformed -> viewModel.handleIntent(MainScreenIntent.DismissError)
+                    SnackbarResult.Dismissed -> viewModel.handleIntent(MainScreenIntent.DismissError)
+                }
+            }
+        }
         Column(
             modifier = Modifier
                 .background(BackgroundDarkColor)
@@ -76,7 +87,6 @@ fun MainScreen(
                 state = state,
                 pagerState = pagerState,
                 pullToRefreshState = pullToRefreshState,
-                onDismiss = { viewModel.handleIntent(MainScreenIntent.DismissError) },
                 refreshWeather = {
                     viewModel.handleIntent(
                         MainScreenIntent.UpdateWeather(
@@ -95,15 +105,8 @@ private fun MainScreenWeather(
     state: MainScreenState,
     pagerState: PagerState,
     pullToRefreshState: PullToRefreshState,
-    onDismiss: () -> Unit,
     refreshWeather: () -> Unit
 ) {
-    state.error?.let { error ->
-        ErrorMessage(
-            error = state.error,
-            onDismiss = onDismiss
-        )
-    }
     Column(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.height(30.dp))
         SearchButton(
@@ -198,7 +201,6 @@ private fun MainScreenWeatherPreview() {
             state = MainScreenState(cities),
             pagerState = rememberPagerState { 1 },
             pullToRefreshState = rememberPullToRefreshState(),
-            onDismiss = {},
             refreshWeather = {}
         )
     }
@@ -220,40 +222,8 @@ private fun MainScreenWeatherPreviewError() {
             state = MainScreenState(cities),
             pagerState = rememberPagerState { 1 },
             pullToRefreshState = rememberPullToRefreshState(),
-            onDismiss = {},
             refreshWeather = {}
         )
-    }
-}
-
-@Composable
-private fun ErrorMessage(
-    error: String,
-    onDismiss: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = error,
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
-            IconButton(onClick = onDismiss) {
-                Icon(Icons.Filled.Close, contentDescription = null)
-            }
-        }
     }
 }
 

@@ -32,11 +32,11 @@ fun WeatherMain(
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(text = city.name, style = Typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = weather.conditionText, style = Typography.bodySmall)
+        Text(text = weather.conditionText, style = Typography.bodyLarge)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "${stringResource(R.string.feels_like)} ${weather.realFeelTemperatureMetric}°",
-            style = Typography.bodySmall
+            style = Typography.bodyLarge
         )
         Spacer(modifier = Modifier.height(32.dp))
         Text(text = "${weather.temperatureMetric}°", style = Typography.headlineLarge)
@@ -59,7 +59,7 @@ fun WeatherDetails(
         ) {
             Text(
                 text = stringResource(R.string.wind),
-                style = Typography.bodySmall,
+                style = Typography.bodyLarge,
                 color = GreyText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -67,7 +67,7 @@ fun WeatherDetails(
             Text(
                 modifier = Modifier.padding(top = 8.dp),
                 text = "${weather.windMetric} ${stringResource(R.string.speed_ms)}",
-                style = Typography.bodyMedium
+                style = Typography.headlineSmall
             )
         }
         Column(
@@ -75,7 +75,7 @@ fun WeatherDetails(
         ) {
             Text(
                 text = stringResource(R.string.humidity),
-                style = Typography.bodySmall,
+                style = Typography.bodyLarge,
                 color = GreyText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -83,7 +83,7 @@ fun WeatherDetails(
             Text(
                 modifier = Modifier.padding(top = 8.dp),
                 text = "${weather.humidity} %",
-                style = Typography.bodyMedium
+                style = Typography.headlineSmall
             )
         }
         Column(
@@ -91,7 +91,7 @@ fun WeatherDetails(
         ) {
             Text(
                 text = stringResource(R.string.precipitation),
-                style = Typography.bodySmall,
+                style = Typography.bodyLarge,
                 color = GreyText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -99,7 +99,7 @@ fun WeatherDetails(
             Text(
                 modifier = Modifier.padding(top = 8.dp),
                 text = "${weather.atmPrecipitation} %",
-                style = Typography.bodyMedium
+                style = Typography.headlineSmall
             )
         }
     }
