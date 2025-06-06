@@ -32,6 +32,7 @@ class MainViewModel @Inject constructor(
     private var weatherJobs: MutableMap<Int, Job> = mutableMapOf()
 
     init {
+//        addCity("294021")
         observeCities()
     }
 
@@ -58,8 +59,7 @@ class MainViewModel @Inject constructor(
                                         dailyForecasts = emptyList(),
                                         hourlyForecasts = emptyList()
                                     )
-                                },
-                                isLoading = false
+                                }
                             )
                         }
 
@@ -68,6 +68,12 @@ class MainViewModel @Inject constructor(
 
                         result.data.forEachIndexed { index, city ->
                             val job = viewModelScope.launch {
+                                _state.update {
+                                    val updatedCities = it.cities.toMutableList()
+                                    updatedCities[index] =
+                                        updatedCities[index].copy(isLoading = true)
+                                    it.copy(cities = updatedCities)
+                                }
                                 combine(
                                     getWeatherUseCase.getCurrentWeather(city.id),
                                     getWeatherUseCase.getDailyForecast(city.id),
@@ -84,22 +90,31 @@ class MainViewModel @Inject constructor(
 
                                     if (error != null) {
                                         _state.update {
+                                            val updatedCities = it.cities.toMutableList()
+                                            updatedCities[index] =
+                                                updatedCities[index].copy(isLoading = false)
                                             it.copy(
                                                 error = errorMessageProvider.getMessage(error),
-                                                isLoading = false
+                                                cities = updatedCities
                                             )
                                         }
                                     } else {
-                                        _state.update { currentState ->
-                                            val updatedCities = currentState.cities.toMutableList()
+                                        val loading = currentWeather is WeatherResult.Loading ||
+                                                dailyForecast is WeatherResult.Loading ||
+                                                hourlyForecast is WeatherResult.Loading
+                                        _state.update {
+                                            val updatedCities = it.cities.toMutableList()
                                             updatedCities[index] = updatedCities[index].copy(
                                                 currentWeather = (currentWeather as? WeatherResult.Success)?.data,
                                                 dailyForecasts = (dailyForecast as? WeatherResult.Success)?.data
                                                     ?: emptyList(),
                                                 hourlyForecasts = (hourlyForecast as? WeatherResult.Success)?.data
-                                                    ?: emptyList()
+                                                    ?: emptyList(),
+                                                isLoading = if (!loading) false else updatedCities[index].isLoading
                                             )
-                                            currentState.copy(cities = updatedCities)
+                                            it.copy(
+                                                cities = updatedCities
+                                            )
                                         }
                                     }
                                 }

@@ -19,6 +19,7 @@ import com.tydm.weatherApp.util.toWeatherError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,9 +33,9 @@ class WeatherRepositoryImpl @Inject constructor(
     override suspend fun addCity(locationKey: String): WeatherResult<Unit> {
         return try {
             val language = weatherLanguages.language
-            val cityResponse = weatherApi.getCityInfoByLocationKey(locationKey, language).body()
-                ?: throw IllegalStateException("Empty city response")
-            val cityId = weatherDao.insertCity(cityResponse.toEntity(language)).toInt()
+            val cityResponse = weatherApi.getCityInfoByLocationKey(locationKey, language)
+            if (cityResponse.body() == null) throw HttpException(cityResponse)
+            val cityId = weatherDao.insertCity(cityResponse.body()!!.toEntity(language)).toInt()
 
             updateWeather(cityId, locationKey, language)
 
@@ -52,9 +53,9 @@ class WeatherRepositoryImpl @Inject constructor(
 
             if (cityEntity.languageCode != language) {
                 val cityResponse =
-                    weatherApi.getCityInfoByLocationKey(cityEntity.locationKey, language).body()
-                        ?: throw IllegalStateException("Empty city response")
-                weatherDao.updateCity(cityResponse.toEntity(language, cityEntity.id))
+                    weatherApi.getCityInfoByLocationKey(cityEntity.locationKey, language)
+                if (cityResponse.body() == null) throw HttpException(cityResponse)
+                weatherDao.updateCity(cityResponse.body()!!.toEntity(language, cityEntity.id))
             }
             updateWeather(cityId, cityEntity.locationKey, language)
         } catch (e: Exception) {
@@ -68,25 +69,25 @@ class WeatherRepositoryImpl @Inject constructor(
         language: String
     ): WeatherResult<Unit> {
         return try {
-            val dailyForecast = weatherApi.getDailyForecast(locationKey, language).body()
-                ?: throw IllegalStateException("Empty daily forecast response")
+            val dailyForecastResponse = weatherApi.getDailyForecast(locationKey, language)
+            if (dailyForecastResponse.body() == null) throw HttpException(dailyForecastResponse)
             weatherDao.deleteDailyForecast(cityId)
-            weatherDao.insertDailyForecast(dailyForecast.toDailyForecastEntityList(cityId))
-            val currentWeather =
-                weatherApi.getCurrentWeather(locationKey, language).body()
-                    ?: throw IllegalStateException("Empty weather response")
+            weatherDao.insertDailyForecast(dailyForecastResponse.body()!!.toDailyForecastEntityList(cityId))
+            val currentWeatherResponse =
+                weatherApi.getCurrentWeather(locationKey, language)
+            if (currentWeatherResponse.body() == null) throw HttpException(currentWeatherResponse)
             weatherDao.deleteWeather(cityId)
             weatherDao.insertWeather(
-                currentWeather.toWeatherEntity(
+                currentWeatherResponse.body()!!.toWeatherEntity(
                     cityId,
-                    dailyForecast.dailyForecasts?.get(0)?.day?.precipitationProbability ?: 0
+                    dailyForecastResponse.body()!!.dailyForecasts?.get(0)?.day?.precipitationProbability ?: 0
                 )
             )
-            val hourlyForecast =
-                weatherApi.getHourlyForecast(locationKey, language).body()
-                    ?: throw IllegalStateException("Empty hourly forecast response")
+            val hourlyForecastResponse =
+                weatherApi.getHourlyForecast(locationKey, language)
+            if (hourlyForecastResponse.body() == null) throw HttpException(hourlyForecastResponse)
             weatherDao.deleteHourlyForecast(cityId)
-            weatherDao.insertHourlyForecast(hourlyForecast.toHourlyForecastEntityList(cityId))
+            weatherDao.insertHourlyForecast(hourlyForecastResponse.body()!!.toHourlyForecastEntityList(cityId))
 
             WeatherResult.Success(Unit)
         } catch (e: Exception) {
