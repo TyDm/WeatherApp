@@ -107,7 +107,7 @@ fun WeatherDetails(
 
 @Preview(backgroundColor = 0xFF222524, showBackground = true)
 @Composable
-fun WeatherMainPreview() {
+private fun WeatherMainPreview() {
     WeatherAppTheme {
         WeatherMain(
             City(
@@ -141,7 +141,7 @@ fun WeatherMainPreview() {
 
 @Preview(backgroundColor = 0xFF222524, showBackground = true)
 @Composable
-fun WeatherDetailsPreview() {
+private fun WeatherDetailsPreview() {
     WeatherAppTheme {
         WeatherDetails(
             Weather(
