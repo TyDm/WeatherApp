@@ -110,7 +110,7 @@ class MainViewModel @Inject constructor(
                                                     ?: emptyList(),
                                                 hourlyForecasts = (hourlyForecast as? WeatherResult.Success)?.data
                                                     ?: emptyList(),
-                                                isLoading = if (!loading) false else updatedCities[index].isLoading
+                                                isLoading = loading
                                             )
                                             it.copy(
                                                 cities = updatedCities

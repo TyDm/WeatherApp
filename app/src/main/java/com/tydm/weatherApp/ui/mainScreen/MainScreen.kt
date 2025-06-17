@@ -44,6 +44,7 @@ import com.tydm.weatherApp.domain.model.HourlyForecast
 import com.tydm.weatherApp.domain.model.Weather
 import com.tydm.weatherApp.ui.mainScreen.components.BottomBar
 import com.tydm.weatherApp.ui.mainScreen.components.SearchButton
+import com.tydm.weatherApp.ui.mainScreen.components.TemperatureGradientBackground
 import com.tydm.weatherApp.ui.mainScreen.components.WeatherDetails
 import com.tydm.weatherApp.ui.mainScreen.components.WeatherMain
 import com.tydm.weatherApp.ui.model.CityWeatherData
@@ -61,29 +62,36 @@ fun MainScreen(
     val snackBarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState)}
+        snackbarHost = { SnackbarHost(snackBarHostState) }
     ) { paddingValues ->
         LaunchedEffect(state.error) {
             if (state.error != null) {
                 val result = snackBarHostState.showSnackbar(
                     message = state.error.toString(),
-                    withDismissAction = true)
+                    withDismissAction = true
+                )
                 when (result) {
                     SnackbarResult.ActionPerformed -> viewModel.handleIntent(MainScreenIntent.DismissError)
                     SnackbarResult.Dismissed -> viewModel.handleIntent(MainScreenIntent.DismissError)
                 }
             }
         }
-        Column(
+
+        Box(
             modifier = Modifier
                 .background(BackgroundDarkColor)
                 .fillMaxSize()
-                .padding(
+        ) {
+            state.cities.getOrNull(pagerState.currentPage)?.currentWeather?.let { weather ->
+                TemperatureGradientBackground(
+                    temperature = weather.temperatureMetric
+                )
+            }
+            MainScreenWeather(
+                modifier = Modifier.padding(
                     top = paddingValues.calculateTopPadding(),
                     bottom = paddingValues.calculateBottomPadding()
-                )
-        ) {
-            MainScreenWeather(
+                ),
                 state = state,
                 pagerState = pagerState,
                 pullToRefreshState = pullToRefreshState,
@@ -99,15 +107,19 @@ fun MainScreen(
     }
 }
 
-
 @Composable
 private fun MainScreenWeather(
+    modifier: Modifier = Modifier,
     state: MainScreenState,
     pagerState: PagerState,
     pullToRefreshState: PullToRefreshState,
     refreshWeather: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(modifier)
+    ) {
         Spacer(modifier = Modifier.height(30.dp))
         SearchButton(
             modifier = Modifier
@@ -157,7 +169,7 @@ private fun MainScreenWeather(
                         } else {
                             Text(
                                 text = stringResource(R.string.error_loading),
-                                style = Typography.bodySmall,
+                                style = Typography.bodyMedium,
                                 modifier = Modifier.align(Alignment.Center)
                             )
                         }
