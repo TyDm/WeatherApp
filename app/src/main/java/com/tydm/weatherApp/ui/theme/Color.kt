@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
-val WhiteText = Color(0xFFFDFAF2)
+val WhiteColor = Color(0xFFFDFAF2)
 val BackgroundDarkColor = Color(0xFF222524)
 val BackgroundGreyColor = Color(138f,138f, 138f, 0.5f)
 val GreyText = Color(0xFF5E605F)

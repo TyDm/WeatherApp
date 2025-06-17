@@ -6,14 +6,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RadialGradientShader
+import androidx.compose.ui.graphics.Shader
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.tooling.preview.Preview
 import com.tydm.weatherApp.ui.theme.BackgroundDarkColor
 import com.tydm.weatherApp.ui.theme.WeatherAppTheme
-import com.tydm.weatherApp.ui.theme.WhiteColor
-import kotlin.math.max
 
 @Composable
 fun TemperatureGradientBackground(
@@ -21,98 +23,69 @@ fun TemperatureGradientBackground(
     modifier: Modifier = Modifier
 ) {
     val windowInfo = LocalWindowInfo.current
-    val screenWidth = windowInfo.containerSize.width
     val screenHeight = windowInfo.containerSize.height
     val (centerColor, middleColor, outerColor) = when {
-        temperature >= 35 -> {
-            Triple(
-                Color(0xFFFF0000),
-                Color(0xFF8B0000),
-                BackgroundDarkColor
-            )
-        }
-        temperature >= 30 -> {
-            Triple(
-                Color(0xFFFF4B4B),
-                Color(0xFF8B0000),
-                BackgroundDarkColor
-            )
-        }
-        temperature >= 25 -> {
-            Triple(
-                Color(0xFFFF6B3D),
-                Color(0xFF8B4513),
-                BackgroundDarkColor
-            )
-        }
         temperature >= 20 -> {
             Triple(
-                Color(0xFFFF8C42),
-                Color(0xFF8B4513),
-                BackgroundDarkColor
-            )
-        }
-        temperature >= 15 -> {
-            Triple(
-                Color(0xFFFFA07A),
+                Color(0xFFE24030),
                 Color(0xFFD2691E),
-                BackgroundDarkColor
+                Color(0xFFCEB9AA)
             )
         }
         temperature >= 10 -> {
             Triple(
-                Color(0xFFFFB74D),
-                Color(0xFFE65100),
-                BackgroundDarkColor
+                Color(0xFFD2691E),
+                Color(0xFFFF8C42),
+                Color(0xFFCEB9AA)
             )
         }
         temperature >= 5 -> {
             Triple(
-                Color(0xFFFFA726),
-                Color(0xFFEF6C00),
-                BackgroundDarkColor
-            )
-        }
-        temperature >= 0 -> {
-            Triple(
-                Color(0xFF87CEEB),
-                Color(0xFF4682B4),
-                BackgroundDarkColor
+                Color(0xFFFF8C42),
+                Color(0xFFFFA07A),
+                Color(0xFFCEB9AA)
             )
         }
         temperature >= -5 -> {
             Triple(
-                Color(0xFF4B9CD3),
-                Color(0xFF1E3A8A),
-                BackgroundDarkColor
+                Color(0xFF2E3E97),
+                Color(0xFF5072BB),
+                Color(0xFF87CEEB),
+//                Color(0xFFCEB9AA)
             )
         }
         temperature >= -10 -> {
             Triple(
-                Color(0xFF2B4C7E),
-                Color(0xFF1E3A8A), 
-                BackgroundDarkColor
-            )
-        }
-        temperature >= -15 -> {
-            Triple(
-                Color(0xFF1E3A8A),
-                Color(0xFF0F172A),
-                BackgroundDarkColor
+                Color(0xFF2B2B74),
+                Color(0xFF2E3E97),
+                Color(0xFF5072BB),
             )
         }
         temperature >= -20 -> {
             Triple(
-                Color(0xFF0F172A),
-                Color(0xFF1A1B4B),
+                Color(0xFF8B68BF),
+                Color(0xFF8A77DC),
                 BackgroundDarkColor
             )
         }
         else -> {
             Triple(
-                Color(0xFF1A1B4B),
-                Color(0xFF0A0A2A),
+                Color(0xFF6007C1),
+                Color(0xFF8B68BF),
                 BackgroundDarkColor
+            )
+        }
+    }
+    val darkRadialGradient = object : ShaderBrush() {
+        override fun createShader(size: Size): Shader {
+            val biggerDimension = maxOf(size.height, size.width)
+            return RadialGradientShader(
+                colors = listOf(
+                    Color.Transparent,
+                    BackgroundDarkColor),
+                center = Offset(size.width/2f, size.height/2.5f),
+                radius = biggerDimension / 2.5f,
+                colorStops = listOf(0f, 0.9f)
             )
         }
     }
@@ -120,30 +93,16 @@ fun TemperatureGradientBackground(
         modifier = modifier
             .fillMaxSize()
             .background(
-                brush = Brush.radialGradient(
-                    colorStops = arrayOf(
-                        0f to centerColor.copy(alpha = 0.85f),
-                        0.5f to middleColor.copy(alpha = 0.85f),
-                        1f to outerColor
-                    ),
-                    center = Offset(screenWidth / 2f, screenHeight / 2.4f),
-                    radius = max(screenWidth, screenHeight).toFloat()/2.7f
-                )
-            )
-            .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.Transparent,
-                        WhiteColor.copy(alpha = 0.01f),
-                        WhiteColor.copy(alpha = 0.01f),
-                        WhiteColor.copy(alpha = 0.05f),
-                        WhiteColor.copy(alpha = 0.07f),
-                        Color.Transparent
+                        centerColor,
+                        middleColor,
+                        outerColor
                     ),
-                    startY = 0f,
                     endY = screenHeight.toFloat()/1.3f
                 )
             )
+            .background(darkRadialGradient)
     )
 }
 
@@ -152,7 +111,7 @@ fun TemperatureGradientBackground(
 private fun TemperatureGradientBackgroundPreview() {
     WeatherAppTheme {
         TemperatureGradientBackground(
-            temperature = -5
+            temperature = 20
         )
     }
 }
