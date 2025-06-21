@@ -71,23 +71,23 @@ class WeatherRepositoryImpl @Inject constructor(
         return try {
             val dailyForecastResponse = weatherApi.getDailyForecast(locationKey, language)
             if (dailyForecastResponse.body() == null) throw HttpException(dailyForecastResponse)
-            weatherDao.deleteDailyForecast(cityId)
-            weatherDao.insertDailyForecast(dailyForecastResponse.body()!!.toDailyForecastEntityList(cityId))
+            weatherDao.updateDailyForecast(cityId, dailyForecastResponse.body()!!.toDailyForecastEntityList(cityId))
+            
             val currentWeatherResponse =
                 weatherApi.getCurrentWeather(locationKey, language)
             if (currentWeatherResponse.body() == null) throw HttpException(currentWeatherResponse)
-            weatherDao.deleteWeather(cityId)
-            weatherDao.insertWeather(
+            weatherDao.updateWeatherData(
+                cityId,
                 currentWeatherResponse.body()!!.toWeatherEntity(
                     cityId,
                     dailyForecastResponse.body()!!.dailyForecasts?.get(0)?.day?.precipitationProbability ?: 0
                 )
             )
+            
             val hourlyForecastResponse =
                 weatherApi.getHourlyForecast(locationKey, language)
             if (hourlyForecastResponse.body() == null) throw HttpException(hourlyForecastResponse)
-            weatherDao.deleteHourlyForecast(cityId)
-            weatherDao.insertHourlyForecast(hourlyForecastResponse.body()!!.toHourlyForecastEntityList(cityId))
+            weatherDao.updateHourlyForecast(cityId, hourlyForecastResponse.body()!!.toHourlyForecastEntityList(cityId))
 
             WeatherResult.Success(Unit)
         } catch (e: Exception) {

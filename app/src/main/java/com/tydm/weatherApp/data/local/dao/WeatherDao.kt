@@ -51,4 +51,23 @@ interface WeatherDao {
 
     @Query("SELECT * FROM hourly_forecast WHERE cityId = :cityId ORDER BY dateTime ASC")
     fun getHourlyForecast(cityId: Int): Flow<List<HourlyForecastEntity>>
+
+    // Atomic update methods
+    @Transaction
+    suspend fun updateDailyForecast(cityId: Int, forecast: List<DailyForecastEntity>) {
+        deleteDailyForecast(cityId)
+        insertDailyForecast(forecast)
+    }
+
+    @Transaction
+    suspend fun updateHourlyForecast(cityId: Int, forecast: List<HourlyForecastEntity>) {
+        deleteHourlyForecast(cityId)
+        insertHourlyForecast(forecast)
+    }
+
+    @Transaction
+    suspend fun updateWeatherData(cityId: Int, weather: WeatherEntity) {
+        deleteWeather(cityId)
+        insertWeather(weather)
+    }
 } 
