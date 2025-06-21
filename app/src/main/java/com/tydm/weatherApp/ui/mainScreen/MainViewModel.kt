@@ -57,7 +57,8 @@ class MainViewModel @Inject constructor(
                                         city = city,
                                         currentWeather = null,
                                         dailyForecasts = emptyList(),
-                                        hourlyForecasts = emptyList()
+                                        hourlyForecasts = emptyList(),
+                                        isLoading = true
                                     )
                                 }
                             )
@@ -68,12 +69,6 @@ class MainViewModel @Inject constructor(
 
                         result.data.forEachIndexed { index, city ->
                             val job = viewModelScope.launch {
-                                _state.update {
-                                    val updatedCities = it.cities.toMutableList()
-                                    updatedCities[index] =
-                                        updatedCities[index].copy(isLoading = true)
-                                    it.copy(cities = updatedCities)
-                                }
                                 combine(
                                     getWeatherUseCase.getCurrentWeather(city.id),
                                     getWeatherUseCase.getDailyForecast(city.id),
@@ -87,21 +82,18 @@ class MainViewModel @Inject constructor(
                                         hourlyForecast is WeatherResult.Error -> hourlyForecast.error
                                         else -> null
                                     }
-
                                     if (error != null) {
                                         _state.update {
                                             val updatedCities = it.cities.toMutableList()
-                                            updatedCities[index] =
-                                                updatedCities[index].copy(isLoading = false)
+                                            updatedCities[index] = updatedCities[index].copy(
+                                                isLoading = false
+                                            )
                                             it.copy(
                                                 error = errorMessageProvider.getMessage(error),
                                                 cities = updatedCities
                                             )
                                         }
                                     } else {
-                                        val loading = currentWeather is WeatherResult.Loading ||
-                                                dailyForecast is WeatherResult.Loading ||
-                                                hourlyForecast is WeatherResult.Loading
                                         _state.update {
                                             val updatedCities = it.cities.toMutableList()
                                             updatedCities[index] = updatedCities[index].copy(
@@ -110,7 +102,7 @@ class MainViewModel @Inject constructor(
                                                     ?: emptyList(),
                                                 hourlyForecasts = (hourlyForecast as? WeatherResult.Success)?.data
                                                     ?: emptyList(),
-                                                isLoading = loading
+                                                isLoading = false
                                             )
                                             it.copy(
                                                 cities = updatedCities
@@ -131,13 +123,8 @@ class MainViewModel @Inject constructor(
                             )
                         }
                     }
-
-                    WeatherResult.Loading -> {
-                        _state.update { it.copy(isLoading = true) }
-                    }
                 }
             }
-
         }
     }
 
@@ -156,10 +143,6 @@ class MainViewModel @Inject constructor(
                             error = errorMessageProvider.getMessage(result.error)
                         )
                     }
-                }
-
-                WeatherResult.Loading -> {
-                    _state.update { it.copy(isRefreshing = true) }
                 }
             }
         }
@@ -184,10 +167,6 @@ class MainViewModel @Inject constructor(
                         )
                     }
                 }
-
-                WeatherResult.Loading -> {
-                    _state.update { it.copy(isLoading = true) }
-                }
             }
         }
     }
@@ -206,10 +185,6 @@ class MainViewModel @Inject constructor(
                             error = errorMessageProvider.getMessage(result.error)
                         )
                     }
-                }
-
-                WeatherResult.Loading -> {
-                    _state.update { it.copy(isLoading = true) }
                 }
             }
         }

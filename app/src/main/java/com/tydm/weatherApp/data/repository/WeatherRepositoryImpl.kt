@@ -105,7 +105,6 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     override fun getCities(): Flow<WeatherResult<List<City>>> = flow {
-        emit(WeatherResult.Loading)
         try {
             weatherDao.getCities()
                 .map { entities -> entities.map { it.toDomain() } }
@@ -118,7 +117,6 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     override fun getCurrentWeather(cityId: Int): Flow<WeatherResult<Weather?>> = flow {
-        emit(WeatherResult.Loading)
         try {
             weatherDao.getWeather(cityId)
                 .map { entity -> entity?.toDomain() }
@@ -131,7 +129,6 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     override fun getDailyForecast(cityId: Int): Flow<WeatherResult<List<DailyForecast>>> = flow {
-        emit(WeatherResult.Loading)
         try {
             weatherDao.getDailyForecast(cityId)
                 .map { entities -> entities.map { it.toDomain() } }
@@ -144,7 +141,6 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     override fun getHourlyForecast(cityId: Int): Flow<WeatherResult<List<HourlyForecast>>> = flow {
-        emit(WeatherResult.Loading)
         try {
             weatherDao.getHourlyForecast(cityId)
                 .map { entities -> entities.map { it.toDomain() } }

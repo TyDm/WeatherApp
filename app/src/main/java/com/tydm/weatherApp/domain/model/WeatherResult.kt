@@ -11,5 +11,4 @@ sealed class WeatherError : Exception() {
 sealed class WeatherResult<out T> {
     data class Success<T>(val data: T) : WeatherResult<T>()
     data class Error(val error: WeatherError) : WeatherResult<Nothing>()
-    object Loading : WeatherResult<Nothing>()
 } 

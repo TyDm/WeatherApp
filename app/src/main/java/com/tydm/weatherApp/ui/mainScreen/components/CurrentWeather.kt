@@ -27,9 +27,10 @@ import com.tydm.weatherApp.ui.theme.WeatherAppTheme
 @Composable
 fun WeatherMain(
     city: City,
-    weather: Weather
+    weather: Weather,
+    modifier: Modifier = Modifier
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
         Text(text = city.name, style = Typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = weather.conditionText, style = Typography.bodyLarge)
@@ -45,12 +46,14 @@ fun WeatherMain(
 
 @Composable
 fun WeatherDetails(
-    weather: Weather
+    weather: Weather,
+    modifier: Modifier = Modifier
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(60.dp),
+            .heightIn(60.dp)
+            .then(modifier),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

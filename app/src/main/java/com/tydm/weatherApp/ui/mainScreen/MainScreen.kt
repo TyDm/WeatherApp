@@ -3,6 +3,7 @@
 package com.tydm.weatherApp.ui.mainScreen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,12 +13,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -43,6 +45,7 @@ import com.tydm.weatherApp.domain.model.DailyForecast
 import com.tydm.weatherApp.domain.model.HourlyForecast
 import com.tydm.weatherApp.domain.model.Weather
 import com.tydm.weatherApp.ui.mainScreen.components.BottomBar
+import com.tydm.weatherApp.ui.mainScreen.components.HourlyForecastRow
 import com.tydm.weatherApp.ui.mainScreen.components.SearchButton
 import com.tydm.weatherApp.ui.mainScreen.components.TemperatureGradientBackground
 import com.tydm.weatherApp.ui.mainScreen.components.WeatherDetails
@@ -127,57 +130,114 @@ private fun MainScreenWeather(
                 .offset(x = (-32).dp)
         )
         Column(modifier = Modifier.weight(1f)) {
-            PullToRefreshBox(
-                isRefreshing = state.isRefreshing,
-                onRefresh = refreshWeather,
-                state = pullToRefreshState,
-            ) {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Bottom
-                ) { page ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 32.dp)
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        if (state.cities[page].isLoading) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        } else if (state.cities[page].currentWeather != null &&
-                            state.cities[page].hourlyForecasts.isNotEmpty() &&
-                            state.cities[page].dailyForecasts.isNotEmpty()
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom
+            ) { page ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    if (state.cities[page].isLoading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.BottomCenter),
-                                verticalArrangement = Arrangement.Bottom
-                            ) {
-                                WeatherMain(
-                                    city = state.cities[page].city,
-                                    weather = state.cities[page].currentWeather!!
+
+                        }
+                    } else if (state.cities[page].currentWeather != null &&
+                        state.cities[page].hourlyForecasts.isNotEmpty() &&
+                        state.cities[page].dailyForecasts.isNotEmpty()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .align(Alignment.BottomCenter),
+                            verticalArrangement = Arrangement.Bottom
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                val lazyListState = rememberLazyListState()
+                                val snapFlingBehavior = rememberSnapFlingBehavior(
+                                    lazyListState = lazyListState
                                 )
-                                WeatherDetails(weather = state.cities[page].currentWeather!!)
+
+                                LaunchedEffect(pagerState.currentPage) {
+                                    lazyListState.animateScrollToItem(0)
+                                }
+
+                                PullToRefreshBox(
+                                    isRefreshing = state.isRefreshing,
+                                    onRefresh = refreshWeather,
+                                    state = pullToRefreshState,
+                                ) {
+                                    LazyColumn(
+                                        state = lazyListState,
+                                        flingBehavior = snapFlingBehavior,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        item() {
+                                            Spacer(modifier = Modifier.height(400.dp))
+                                            WeatherMain(
+                                                city = state.cities[page].city,
+                                                weather = state.cities[page].currentWeather!!,
+                                                modifier = Modifier.padding(horizontal = 32.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(32.dp))
+                                        }
+                                        item {
+                                            HourlyForecastRow(
+                                                hourlyForecastList = state.cities[page].hourlyForecasts,
+                                                gmtOffset = state.cities[page].city.gmtOffset
+                                            )
+                                            Spacer(modifier = Modifier.height(32.dp))
+                                        }
+                                    }
+                                }
                             }
-                        } else {
-                            Text(
-                                text = stringResource(R.string.error_loading),
-                                style = Typography.bodyMedium,
-                                modifier = Modifier.align(Alignment.Center)
+                            WeatherDetails(
+                                weather = state.cities[page].currentWeather!!,
+                                modifier = Modifier.padding(horizontal = 32.dp)
                             )
                         }
+                    } else {
+                        ErrorScreen(
+                            state = state,
+                            refreshWeather = refreshWeather,
+                            pullToRefreshState = pullToRefreshState
+                        )
                     }
                 }
             }
         }
         BottomBar(pagerState)
+    }
+}
+
+@Composable
+private fun ErrorScreen(
+    state: MainScreenState,
+    refreshWeather: () -> Unit,
+    pullToRefreshState: PullToRefreshState,
+    modifier: Modifier = Modifier
+){
+    PullToRefreshBox(
+        isRefreshing = state.isRefreshing,
+        onRefresh = refreshWeather,
+        state = pullToRefreshState,
+    ){
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .then(modifier)
+        ) {
+            Text(
+                text = stringResource(R.string.error_loading),
+                style = Typography.bodyMedium,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
     }
 }
 

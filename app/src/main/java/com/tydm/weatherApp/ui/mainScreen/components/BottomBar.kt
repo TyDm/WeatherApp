@@ -38,7 +38,7 @@ fun BottomBar(
 
 @Preview
 @Composable
-fun BottomBarPreview(){
+private fun BottomBarPreview(){
     val pagerState = rememberPagerState { 3 }
     BottomBar(pagerState = pagerState)
 }

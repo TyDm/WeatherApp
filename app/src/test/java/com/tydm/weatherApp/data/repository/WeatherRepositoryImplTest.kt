@@ -168,7 +168,7 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `getCurrentWeather emits loading and success states`() = runTest {
+    fun `getCurrentWeather emits success state`() = runTest {
 
         val cityId = 1
         val weatherEntity = WeatherEntity(
@@ -193,7 +193,6 @@ class WeatherRepositoryImplTest {
         coEvery { weatherDao.getWeather(cityId) } returns flowOf(weatherEntity)
 
         repository.getCurrentWeather(cityId).test {
-            assertThat(awaitItem()).isEqualTo(WeatherResult.Loading)
             val successResult = awaitItem()
             assertThat(successResult).isInstanceOf(WeatherResult.Success::class.java)
             assertThat((successResult as WeatherResult.Success).data?.cityId)
@@ -203,13 +202,12 @@ class WeatherRepositoryImplTest {
     }
 
     @Test
-    fun `getCurrentWeather emits loading and error states on database error`() = runTest {
+    fun `getCurrentWeather emits error state on database error`() = runTest {
 
         val cityId = 1
         coEvery { weatherDao.getWeather(cityId) } throws RuntimeException("Database error")
 
         repository.getCurrentWeather(cityId).test {
-            assertThat(awaitItem()).isEqualTo(WeatherResult.Loading)
             val errorResult = awaitItem()
             assertThat(errorResult).isInstanceOf(WeatherResult.Error::class.java)
             assertThat((errorResult as WeatherResult.Error).error)
