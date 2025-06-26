@@ -32,6 +32,9 @@ class MainViewModel @Inject constructor(
     private var weatherJobs: MutableMap<Int, Job> = mutableMapOf()
 
     init {
+//        addCity("295146")
+//        addCity("294459")
+//        addCity("289484")
 //        addCity("294021")
         observeCities()
     }

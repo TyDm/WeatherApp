@@ -13,4 +13,5 @@
     <string name="humidity">Влажность</string>
     <string name="precipitation">Осадки</string>
     <string name="speed_ms">м/с</string>
+    <string name="search">Поиск</string>
 </resources> 

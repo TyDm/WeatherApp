@@ -21,6 +21,7 @@ val Typography = Typography(
     headlineMedium = TextStyle(
         fontFamily = montFamily,
         fontSize = 48.sp,
+        lineHeight = 64.sp,
         color = WhiteColor
     ),
     headlineSmall = TextStyle(
@@ -37,6 +38,17 @@ val Typography = Typography(
         fontFamily = montFamily,
         fontSize = 12.sp,
         lineHeight = 24.sp,
+        color = WhiteColor
+    ),
+    displayLarge = TextStyle(
+        fontFamily = montFamily,
+        fontSize = 64.sp,
+        color = WhiteColor
+    ),
+    displayMedium = TextStyle(
+        fontFamily = montFamily,
+        fontSize = 32.sp,
+        lineHeight = 48.sp,
         color = WhiteColor
     )
 )

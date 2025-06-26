@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,22 +27,24 @@ import kotlin.math.roundToInt
 fun HourlyForecastRow(
     hourlyForecastList: List<HourlyForecast>,
     gmtOffset: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    lazyListState: LazyListState = rememberLazyListState(),
 ) {
-    LazyRow(modifier = Modifier.fillMaxWidth().then(modifier)) {
-        item{
-            Spacer(modifier = Modifier.width(32.dp))
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(modifier),
+        state = lazyListState,
+    ) {
+        item {
+            Spacer(modifier = Modifier.width(16.dp))
         }
         itemsIndexed(hourlyForecastList) { index, forecast ->
             HourlyForecastItem(
                 hourlyForecast = forecast,
                 gmtOffset = gmtOffset
             )
-            if (index != hourlyForecastList.lastIndex)
             Spacer(modifier = Modifier.width(16.dp))
-        }
-        item{
-            Spacer(modifier = Modifier.width(32.dp))
         }
     }
 }
@@ -99,7 +103,8 @@ private fun HourlyForecastItemPreview() {
 private fun HourlyForecastRowPreview() {
     WeatherAppTheme {
         HourlyForecastRow(
-            listOf(
+            lazyListState = rememberLazyListState(),
+            hourlyForecastList = listOf(
                 HourlyForecast(
                     id = 0,
                     cityId = 0,

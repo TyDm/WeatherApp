@@ -14,4 +14,5 @@
     <string name="humidity">Humidity</string>
     <string name="precipitation">Precipitation</string>
     <string name="speed_ms">m/s</string>
+    <string name="search">Search</string>
 </resources>

@@ -30,8 +30,18 @@ fun WeatherMain(
     weather: Weather,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = Modifier.fillMaxWidth().then(modifier)) {
-        Text(text = city.name, style = Typography.headlineMedium)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(modifier)
+    ) {
+        ResizableText(
+            text = city.name,
+            maxFontSize = Typography.headlineMedium.fontSize,
+            minFontSize = Typography.displayMedium.fontSize,
+            fontStyle = Typography.headlineMedium,
+            lineHeightMultiplier = 1.2f
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = weather.conditionText, style = Typography.bodyLarge)
         Spacer(modifier = Modifier.height(8.dp))
@@ -41,6 +51,7 @@ fun WeatherMain(
         )
         Spacer(modifier = Modifier.height(32.dp))
         Text(text = "${weather.temperatureMetric}°", style = Typography.headlineLarge)
+
     }
 }
 
@@ -63,9 +74,7 @@ fun WeatherDetails(
             Text(
                 text = stringResource(R.string.wind),
                 style = Typography.bodyLarge,
-                color = GreyText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                color = GreyText
             )
             Text(
                 modifier = Modifier.padding(top = 8.dp),

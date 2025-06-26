@@ -13,8 +13,16 @@ import androidx.compose.ui.unit.dp
 import com.tydm.weatherApp.ui.theme.BackgroundGreyColor
 
 @Composable
-fun SearchButton(modifier: Modifier = Modifier) {
-    IconButton({ }, modifier = Modifier.size(60.dp).then(modifier)) {
+fun SearchButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(60.dp)
+            .then(modifier)
+    ) {
         Canvas(modifier = Modifier.size(60.dp)) {
             drawCircle(
                 color = BackgroundGreyColor,
@@ -33,6 +41,6 @@ fun SearchButton(modifier: Modifier = Modifier) {
 
 @Preview
 @Composable
-fun SearchButtonPreview() {
+private fun SearchButtonPreview() {
     SearchButton()
 }
