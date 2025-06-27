@@ -1,6 +1,5 @@
 package com.tydm.weatherApp.ui.mainScreen.components
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,7 +36,6 @@ fun CityCard(
     modifier: Modifier = Modifier,
     onClickDelete: () -> Unit = {}
 ) {
-    Log.d("ComposeLog", "CityCard recomposed: ${city.name}")
     Box(
         modifier = Modifier
             .fillMaxWidth()

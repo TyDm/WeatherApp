@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.tydm.weatherApp.ui.mainScreen
 
 import androidx.lifecycle.ViewModel
@@ -10,10 +12,12 @@ import com.tydm.weatherApp.domain.usecase.UpdateWeatherUseCase
 import com.tydm.weatherApp.ui.model.CityWeatherData
 import com.tydm.weatherApp.ui.util.AndroidErrorMessageProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,7 +33,9 @@ class MainViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(MainScreenState())
     val state: StateFlow<MainScreenState> = _state
-    private var weatherJobs: MutableMap<Int, Job> = mutableMapOf()
+
+    private val _isListWasLoaded = MutableStateFlow(false)
+    val isListWasLoaded: StateFlow<Boolean> = _isListWasLoaded
 
     init {
 //        addCity("295146")
@@ -38,6 +44,10 @@ class MainViewModel @Inject constructor(
 //        addCity("294021")
         observeCities()
     }
+    //INSERT INTO cities
+    //SELECT * FROM cities_backup
+//    INSERT INTO current_weather
+//    SELECT * FROM current_Weather_backup
 
     fun handleIntent(intent: MainScreenIntent) {
         when (intent) {
@@ -50,84 +60,54 @@ class MainViewModel @Inject constructor(
 
     private fun observeCities() {
         viewModelScope.launch {
-            getWeatherUseCase.getCities().collect { result ->
-                when (result) {
-                    is WeatherResult.Success -> {
-                        _state.update {
-                            it.copy(
-                                cities = result.data.map { city ->
-                                    CityWeatherData(
-                                        city = city,
-                                        currentWeather = null,
-                                        dailyForecasts = emptyList(),
-                                        hourlyForecasts = emptyList(),
-                                        isLoading = true
-                                    )
-                                }
-                            )
-                        }
-
-                        weatherJobs.values.forEach { it.cancel() }
-                        weatherJobs.clear()
-
-                        result.data.forEachIndexed { index, city ->
-                            val job = viewModelScope.launch {
+            getWeatherUseCase.getCities()
+                .flatMapLatest { result ->
+                    when (result) {
+                        is WeatherResult.Success -> {
+                            val cities = result.data
+                            if (result.data.isEmpty())
+                                return@flatMapLatest flowOf(emptyList<CityWeatherData>())
+                            val cityWeatherFlows = cities.map { city ->
                                 combine(
                                     getWeatherUseCase.getCurrentWeather(city.id),
                                     getWeatherUseCase.getDailyForecast(city.id),
                                     getWeatherUseCase.getHourlyForecast(city.id)
                                 ) { currentWeather, dailyForecast, hourlyForecast ->
-                                    Triple(currentWeather, dailyForecast, hourlyForecast)
-                                }.collect { (currentWeather, dailyForecast, hourlyForecast) ->
-                                    val error = when {
-                                        currentWeather is WeatherResult.Error -> currentWeather.error
-                                        dailyForecast is WeatherResult.Error -> dailyForecast.error
-                                        hourlyForecast is WeatherResult.Error -> hourlyForecast.error
-                                        else -> null
-                                    }
-                                    if (error != null) {
-                                        _state.update {
-                                            val updatedCities = it.cities.toMutableList()
-                                            updatedCities[index] = updatedCities[index].copy(
-                                                isLoading = false
-                                            )
-                                            it.copy(
-                                                error = errorMessageProvider.getMessage(error),
-                                                cities = updatedCities
-                                            )
-                                        }
-                                    } else {
-                                        _state.update {
-                                            val updatedCities = it.cities.toMutableList()
-                                            updatedCities[index] = updatedCities[index].copy(
-                                                currentWeather = (currentWeather as? WeatherResult.Success)?.data,
-                                                dailyForecasts = (dailyForecast as? WeatherResult.Success)?.data
-                                                    ?: emptyList(),
-                                                hourlyForecasts = (hourlyForecast as? WeatherResult.Success)?.data
-                                                    ?: emptyList(),
-                                                isLoading = false
-                                            )
-                                            it.copy(
-                                                cities = updatedCities
-                                            )
-                                        }
-                                    }
+                                    CityWeatherData(
+                                        city = city,
+                                        currentWeather = (currentWeather as? WeatherResult.Success)?.data,
+                                        dailyForecasts = (dailyForecast as? WeatherResult.Success)?.data
+                                            ?: emptyList(),
+                                        hourlyForecasts = (hourlyForecast as? WeatherResult.Success)?.data
+                                            ?: emptyList(),
+                                        isLoading = currentWeather !is WeatherResult.Success ||
+                                                dailyForecast !is WeatherResult.Success ||
+                                                hourlyForecast !is WeatherResult.Success
+                                    )
                                 }
                             }
-                            weatherJobs[city.id] = job
+                            combine(cityWeatherFlows) { it.toList() }
                         }
-                    }
 
-                    is WeatherResult.Error -> {
-                        _state.update {
-                            it.copy(
-                                error = errorMessageProvider.getMessage(result.error),
-                                isLoading = false
-                            )
+                        is WeatherResult.Error -> {
+                            _state.update {
+                                it.copy(
+                                    error = errorMessageProvider.getMessage(result.error),
+                                    isLoading = false
+                                )
+                            }
+                            flowOf(emptyList<CityWeatherData>())
                         }
                     }
                 }
-            }
+                .collect { cityWeatherDataList ->
+                    _state.update {
+                        it.copy(
+                            cities = cityWeatherDataList
+                        )
+                    }
+                    _isListWasLoaded.update { true }
+                }
         }
     }
 
@@ -150,6 +130,7 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
 
     private fun deleteCity(id: Int) {
         viewModelScope.launch {
@@ -192,6 +173,7 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
 
     private fun dismissError() {
         _state.update { it.copy(error = null) }

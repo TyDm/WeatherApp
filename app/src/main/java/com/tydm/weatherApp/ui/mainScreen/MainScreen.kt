@@ -2,10 +2,6 @@
 
 package com.tydm.weatherApp.ui.mainScreen
 
-import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -19,19 +15,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -39,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,12 +46,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.tydm.weatherApp.R
 import com.tydm.weatherApp.domain.model.City
@@ -64,10 +57,9 @@ import com.tydm.weatherApp.domain.model.DailyForecast
 import com.tydm.weatherApp.domain.model.HourlyForecast
 import com.tydm.weatherApp.domain.model.Weather
 import com.tydm.weatherApp.ui.mainScreen.components.BottomBar
-import com.tydm.weatherApp.ui.mainScreen.components.CityCard
 import com.tydm.weatherApp.ui.mainScreen.components.HourlyForecastRow
 import com.tydm.weatherApp.ui.mainScreen.components.SearchButton
-import com.tydm.weatherApp.ui.mainScreen.components.SearchTextField
+import com.tydm.weatherApp.ui.mainScreen.components.SettingsSheet
 import com.tydm.weatherApp.ui.mainScreen.components.TemperatureGradientBackground
 import com.tydm.weatherApp.ui.mainScreen.components.WeatherDetails
 import com.tydm.weatherApp.ui.mainScreen.components.WeatherMain
@@ -81,25 +73,40 @@ import kotlinx.coroutines.launch
 fun MainScreen(
     viewModel: MainViewModel
 ) {
-    val state by viewModel.state.collectAsState()
-    val pagerState = rememberPagerState { state.cities.size }
+    val viewModelState by viewModel.state.collectAsState()
+    val isListWasLoaded by viewModel.isListWasLoaded.collectAsState()
+    val pagerState = rememberPagerState { viewModelState.cities.size }
     val pullToRefreshState = rememberPullToRefreshState()
     val snackBarHostState = remember { SnackbarHostState() }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var isOpenSettings = remember {
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetScaffoldState = rememberBottomSheetScaffoldState(bottomSheetState)
+    val maxSheetOffset = LocalWindowInfo.current.containerSize.height.toFloat()
+    val sheetSwipeEnabled = remember {
         derivedStateOf {
-            sheetState.targetValue == SheetValue.Expanded
+            viewModelState.cities.isNotEmpty()
         }
     }
     val scope = rememberCoroutineScope()
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState) }
+    BottomSheetScaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState) },
+        scaffoldState = sheetScaffoldState,
+        sheetContainerColor = Color.Transparent,
+        sheetDragHandle = null,
+        sheetShadowElevation = 0.dp,
+        sheetSwipeEnabled = sheetSwipeEnabled.value,
+        sheetContent = {
+            SettingsSheet(
+                citiesList = viewModelState.cities,
+                onClickDelete = { viewModel.handleIntent(MainScreenIntent.DeleteCity(it)) }
+            )
+        }
     ) { paddingValues ->
-        LaunchedEffect(state.error) {
-            if (state.error != null) {
+
+        LaunchedEffect(viewModelState.error) {
+            if (viewModelState.error != null) {
                 val result = snackBarHostState.showSnackbar(
-                    message = state.error.toString(),
+                    message = viewModelState.error.toString(),
                     withDismissAction = true
                 )
                 when (result) {
@@ -109,52 +116,41 @@ fun MainScreen(
             }
         }
 
+        LaunchedEffect(isListWasLoaded, viewModelState.cities) {
+            if (isListWasLoaded && viewModelState.cities.isEmpty()){
+                bottomSheetState.show()
+            }
+        }
+
         Box(
             modifier = Modifier
                 .background(BackgroundDarkColor)
                 .fillMaxSize()
         ) {
-            state.cities.getOrNull(pagerState.currentPage)?.currentWeather?.let { weather ->
+            viewModelState.cities.getOrNull(pagerState.currentPage)?.currentWeather?.let { weather ->
                 TemperatureGradientBackground(
                     temperature = weather.temperatureMetric
                 )
             }
-            AnimatedVisibility(
-                visible = !isOpenSettings.value,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                MainScreenWeather(
-                    modifier = Modifier
-                        .padding(
-                            top = paddingValues.calculateTopPadding(),
-                            bottom = paddingValues.calculateBottomPadding()
-                        ),
-                    state = state,
-                    pagerState = pagerState,
-                    pullToRefreshState = pullToRefreshState,
-                    refreshWeather = {
-                        viewModel.handleIntent(
-                            MainScreenIntent.UpdateWeather(
-                                state.cities[pagerState.currentPage].city.id
-                            )
+            MainScreenWeather(
+                state = viewModelState,
+                pagerState = pagerState,
+                pullToRefreshState = pullToRefreshState,
+                refreshWeather = {
+                    viewModel.handleIntent(
+                        MainScreenIntent.UpdateWeather(
+                            viewModelState.cities[pagerState.currentPage].city.id
                         )
-                    },
-                    openSettings = { scope.launch { sheetState.show(); } }
-                )
-            }
-            if (sheetState.currentValue == SheetValue.Expanded || isOpenSettings.value) {
-                MainScreenSettings(
-                    state = state,
-                    sheetState = sheetState,
-                    onDeleteCity = { viewModel.handleIntent(MainScreenIntent.DeleteCity(it)) },
-                    modifier = Modifier.padding(
-                        top = paddingValues.calculateTopPadding(),
-                        bottom = paddingValues.calculateBottomPadding()
                     )
-                )
-            }
-
+                },
+                openSettings = { scope.launch { bottomSheetState.show(); } },
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .graphicsLayer(
+                        alpha =
+                            (bottomSheetState.currentOffset() / maxSheetOffset).coerceIn(0f, 1f)
+                    )
+            )
         }
     }
 }
@@ -173,7 +169,7 @@ private fun MainScreenWeather(
             .fillMaxSize()
             .then(modifier)
     ) {
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(32.dp))
         SearchButton(
             modifier = Modifier
                 .align(Alignment.End)
@@ -198,9 +194,7 @@ private fun MainScreenWeather(
                     ) {
 
                     }
-                } else if (state.cities[page].currentWeather != null &&
-                    state.cities[page].hourlyForecasts.isNotEmpty() &&
-                    state.cities[page].dailyForecasts.isNotEmpty()
+                } else if (state.cities[page].currentWeather != null
                 ) {
                     Column(
                         modifier = Modifier
@@ -271,92 +265,6 @@ private fun MainScreenWeather(
 }
 
 @Composable
-private fun MainScreenSettings(
-    state: MainScreenState,
-    sheetState: SheetState,
-    modifier: Modifier = Modifier,
-    onDismiss: () -> Unit = {},
-    onDeleteCity: (id: Int) -> Unit = {},
-) {
-    Log.d("ComposeLog", "MainScreenSettings recomposed")
-    val lazyListState = rememberLazyListState()
-    val snapFlingBehavior = rememberSnapFlingBehavior(
-        lazyListState = lazyListState,
-        snapPosition = SnapPosition.End
-    )
-    val nestedScrollConnection = remember {
-        object : NestedScrollConnection {
-            override suspend fun onPostFling(
-                consumed: Velocity,
-                available: Velocity
-            ): Velocity {
-                return Velocity.Zero
-            }
-
-            override suspend fun onPreFling(available: Velocity): Velocity {
-                return Velocity.Zero
-            }
-        }
-    }
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = Color.Transparent,
-        scrimColor = Color.Transparent,
-        dragHandle = null,
-        modifier = Modifier.nestedScroll(nestedScrollConnection)
-    ) {
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(modifier),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.weight(0.1f))
-            SearchTextField(
-                onValueChange = {},
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-            )
-            Spacer(modifier = Modifier.weight(0.05f))
-            BoxWithConstraints(modifier = Modifier.weight(0.5f)) {
-                LazyColumn(
-                    state = lazyListState,
-                    flingBehavior = snapFlingBehavior,
-                    modifier = Modifier.fillMaxSize(),
-                    reverseLayout = true
-                ) {
-                    items(
-                        items = state.cities,
-                        key = {cityWeatherData -> cityWeatherData.city.id }
-                    )
-                    {cityWeatherData ->
-                        Log.d("ComposeLog", "LazyColumn item: ${cityWeatherData.city.name}")
-                        cityWeatherData.currentWeather?.let {
-                            CityCard(
-                                city = cityWeatherData.city,
-                                currentWeather = cityWeatherData.currentWeather,
-                                onClickDelete = {onDeleteCity(cityWeatherData.city.id)},
-                                modifier = Modifier
-                                    .height(this@BoxWithConstraints.maxHeight / 3)
-                                    .animateItem()
-                            )
-                        }
-
-                    }
-
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(0.1f))
-        }
-    }
-
-}
-
-@Composable
 private fun ErrorScreen(
     state: MainScreenState,
     refreshWeather: () -> Unit,
@@ -381,6 +289,12 @@ private fun ErrorScreen(
             )
         }
     }
+}
+
+fun SheetState.currentOffset() = try {
+    this.requireOffset()
+} catch (_: IllegalStateException) {
+    0f
 }
 
 @Preview(backgroundColor = 0xFF222524, showBackground = true, showSystemUi = true)
@@ -418,54 +332,6 @@ private fun MainScreenWeatherPreview() {
             refreshWeather = {},
             openSettings = {}
         )
-    }
-}
-
-@Preview(backgroundColor = 0xFF222524, showBackground = true)
-@Composable
-private fun MainScreenSettingsPreview() {
-    val cityWeatherData = CityWeatherData(
-        city = City(0, "", "Moscow", "", "", 3),
-        currentWeather = Weather(
-            id = 0,
-            cityId = 0,
-            observationTime = 0,
-            updateTime = 0,
-            temperatureMetric = 32,
-            temperatureImperial = 0,
-            realFeelTemperatureMetric = 28,
-            realFeelTemperatureImperial = 0,
-            humidity = 10,
-            windMetric = 2,
-            windImperial = 0f,
-            conditionText = "Cloudy",
-            conditionCode = 0,
-            atmPrecipitation = 12,
-            mobileLink = ""
-        ),
-        dailyForecasts = listOf(DailyForecast(0, 0, 0, 0, 0, 0, 0, "", 0, "")),
-        hourlyForecasts = listOf(HourlyForecast(0, 0, 0, 0f, 0, "", 0, ""))
-    )
-    val cities = listOf<CityWeatherData>(
-        cityWeatherData.copy(city = City(0, "", "Saint Petersburg", "", "", 3)),
-        cityWeatherData.copy(city = City(0, "", "Moscow", "", "", 3)),
-        cityWeatherData.copy(city = City(0, "", "Novosibirsk", "", "", 3)),
-        cityWeatherData.copy(city = City(0, "", "Krasnodar", "", "", 3)),
-    )
-
-    WeatherAppTheme {
-        MainScreenSettings(
-            state = MainScreenState(cities),
-            sheetState = SheetState(
-                skipPartiallyExpanded = true,
-                density = LocalDensity.current,
-                initialValue = SheetValue.Expanded,
-                skipHiddenState = true
-            ),
-            onDismiss = {},
-            modifier = Modifier
-        )
-
     }
 }
 
