@@ -15,7 +15,7 @@ import com.tydm.weatherApp.data.local.entity.HourlyForecastEntity
         DailyForecastEntity::class,
         HourlyForecastEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class WeatherDatabase : RoomDatabase() {
