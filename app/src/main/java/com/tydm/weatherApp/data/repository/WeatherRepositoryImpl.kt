@@ -48,6 +48,7 @@ class WeatherRepositoryImpl @Inject constructor(
 
             WeatherResult.Success(cityId)
         } catch (e: Exception) {
+            Log.e("WeatherRepositoryImpl", "Ошибка при добавлении города", e)
             WeatherResult.Error(e.toWeatherError())
         }
     }
@@ -66,6 +67,7 @@ class WeatherRepositoryImpl @Inject constructor(
             }
             updateWeather(cityId, cityEntity.locationKey, language)
         } catch (e: Exception) {
+            Log.e("WeatherRepositoryImpl", "Ошибка при обновлении погоды", e)
             WeatherResult.Error(e.toWeatherError())
         }
     }
@@ -108,6 +110,7 @@ class WeatherRepositoryImpl @Inject constructor(
             normalizeCityOrder()
             WeatherResult.Success(Unit)
         } catch (e: Exception) {
+            Log.e("WeatherRepositoryImpl", "Ошибка при удалении города", e)
             WeatherResult.Error(WeatherError.DatabaseError(e))
         }
     }
@@ -132,6 +135,7 @@ class WeatherRepositoryImpl @Inject constructor(
                     emit(WeatherResult.Success(weather))
                 }
         } catch (e: Exception) {
+            Log.e("WeatherRepositoryImpl", "Ошибка при получении текущей погоды", e)
             emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
         }
     }
@@ -144,6 +148,7 @@ class WeatherRepositoryImpl @Inject constructor(
                     emit(WeatherResult.Success(forecast))
                 }
         } catch (e: Exception) {
+            Log.e("WeatherRepositoryImpl", "Ошибка при получении дневного прогноза", e)
             emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
         }
     }
@@ -156,6 +161,7 @@ class WeatherRepositoryImpl @Inject constructor(
                     emit(WeatherResult.Success(forecast))
                 }
         } catch (e: Exception) {
+            Log.e("WeatherRepositoryImpl", "Ошибка при получении почасового прогноза", e)
             emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
         }
     }
@@ -171,6 +177,7 @@ class WeatherRepositoryImpl @Inject constructor(
             }
             return WeatherResult.Success(searchCityResponse.body()!!.toSearchItemList())
         } catch (e: Exception) {
+            Log.e("WeatherRepositoryImpl", "Ошибка при поиске города", e)
             return WeatherResult.Error(e.toWeatherError())
         }
     }
@@ -194,6 +201,7 @@ class WeatherRepositoryImpl @Inject constructor(
             moveCityToTopInternal(cityId)
             WeatherResult.Success(Unit)
         } catch (e: Exception) {
+            Log.e("WeatherRepositoryImpl", "Ошибка при перемещении города наверх", e)
             WeatherResult.Error(e.toWeatherError())
         }
     }

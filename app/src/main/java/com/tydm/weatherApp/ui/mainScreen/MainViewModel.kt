@@ -2,6 +2,7 @@
 
 package com.tydm.weatherApp.ui.mainScreen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tydm.weatherApp.domain.model.WeatherResult
@@ -118,6 +119,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 is WeatherResult.Error -> {
+                    Log.e("MainViewModel", "Ошибка при обновлении погоды: ${result.error}")
                     _effect.value = MainScreenEffect
                         .ShowError(errorMessageProvider.getMessage(result.error))
                     _state.update {
@@ -136,6 +138,7 @@ class MainViewModel @Inject constructor(
                 is WeatherResult.Success -> {}
 
                 is WeatherResult.Error -> {
+                    Log.e("MainViewModel", "Ошибка при удалении города: ${result.error}")
                     _effect.value = MainScreenEffect
                         .ShowError(errorMessageProvider.getMessage(result.error))
                 }
@@ -156,6 +159,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 is WeatherResult.Error -> {
+                    Log.e("MainViewModel", "Ошибка при добавлении города: ${result.error}")
                     _effect.value = MainScreenEffect
                         .ShowError(errorMessageProvider.getMessage(result.error))
                 }
@@ -185,6 +189,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 is WeatherResult.Error -> {
+                    Log.e("MainViewModel", "Ошибка поиска города: ${result.error}")
                     if (result.error.cause is kotlinx.coroutines.CancellationException) return@launch
                     _effect.value = MainScreenEffect
                         .ShowError(errorMessageProvider.getMessage(result.error))
