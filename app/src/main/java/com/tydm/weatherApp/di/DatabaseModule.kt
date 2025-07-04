@@ -25,6 +25,7 @@ object DatabaseModule {
             WeatherDatabase::class.java,
             "weather_database"
         )
+            .fallbackToDestructiveMigration(false) // for testing
             .build()
     }
 

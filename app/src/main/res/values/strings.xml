@@ -21,4 +21,6 @@
     <string name="label_day">Day</string>
     <string name="label_current_location">Current location</string>
     <string name="label_im_here">I\'m here</string>
+    <string name="label_cities_not_found">Cities not found</string>
+    <string name="label_cities_not_found_add">Cities not found \nAdd city</string>
 </resources>

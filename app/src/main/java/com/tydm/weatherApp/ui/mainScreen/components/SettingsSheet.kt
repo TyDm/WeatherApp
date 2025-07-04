@@ -10,19 +10,27 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tydm.weatherApp.R
 import com.tydm.weatherApp.domain.model.City
 import com.tydm.weatherApp.domain.model.DailyForecast
 import com.tydm.weatherApp.domain.model.HourlyForecast
@@ -30,7 +38,10 @@ import com.tydm.weatherApp.domain.model.SearchItem
 import com.tydm.weatherApp.domain.model.Weather
 import com.tydm.weatherApp.ui.model.CityWeatherData
 import com.tydm.weatherApp.ui.theme.GreyColor
+import com.tydm.weatherApp.ui.theme.GreyTextColor
+import com.tydm.weatherApp.ui.theme.Typography
 import com.tydm.weatherApp.ui.theme.WeatherAppTheme
+import com.tydm.weatherApp.ui.theme.WhiteColor
 
 @Composable
 fun SettingsSheet(
@@ -62,7 +73,9 @@ fun SettingsSheet(
         )
         Spacer(modifier = Modifier.height(16.dp))
         when (isLoading) {
-            true -> Box(modifier = Modifier.weight(0.5f).padding(top = 32.dp)) {
+            true -> Box(modifier = Modifier
+                .weight(0.5f)
+                .padding(top = 32.dp)) {
                 CircularProgressIndicator(color = GreyColor)
             }
 
@@ -80,7 +93,7 @@ fun SettingsSheet(
                     SearchList(
                         searchCitesList = searchCitesList,
                         highLightText = textFieldValue.text.trim(),
-                        onItemClick = {  onSearchItemClick(it) },
+                        onItemClick = { onSearchItemClick(it) },
                         modifier = Modifier
                             .weight(0.5f)
                             .padding(horizontal = 16.dp)
@@ -105,36 +118,45 @@ private fun CityCardList(
         lazyListState = lazyListState,
         snapPosition = SnapPosition.End
     )
-    BoxWithConstraints(modifier = Modifier.then(modifier)) {
-        LazyColumn(
-            state = lazyListState,
-            flingBehavior = snapFlingBehavior,
-            modifier = Modifier.fillMaxSize(),
-            reverseLayout = true
-        ) {
-            itemsIndexed(
-                items = citiesList,
-                key = { _, cityWeatherData -> cityWeatherData.city.id }
-            )
-            { index, cityWeatherData ->
+    if (citiesList.isNotEmpty()) {
+        BoxWithConstraints(modifier = Modifier.then(modifier)) {
+            LazyColumn(
+                state = lazyListState,
+                flingBehavior = snapFlingBehavior,
+                modifier = Modifier.fillMaxSize(),
+                reverseLayout = true
+            ) {
+                itemsIndexed(
+                    items = citiesList,
+                    key = { _, cityWeatherData -> cityWeatherData.city.id }
+                )
+                { index, cityWeatherData ->
 
-                cityWeatherData.currentWeather?.let {
-                    CityCard(
-                        city = cityWeatherData.city,
-                        index = index,
-                        currentWeather = cityWeatherData.currentWeather,
-                        onClickImHere = { onClickImHere(cityWeatherData.city.id) },
-                        onClickDelete = { onClickDelete(cityWeatherData.city.id) },
-                        modifier = Modifier
-                            .height(this@BoxWithConstraints.maxHeight / 3)
-                            .animateItem()
-                            .clickable{ onItemClick(index) }
-                    )
+                    cityWeatherData.currentWeather?.let {
+                        CityCard(
+                            city = cityWeatherData.city,
+                            index = index,
+                            currentWeather = cityWeatherData.currentWeather,
+                            onClickImHere = { onClickImHere(cityWeatherData.city.id) },
+                            onClickDelete = { onClickDelete(cityWeatherData.city.id) },
+                            modifier = Modifier
+                                .height(this@BoxWithConstraints.maxHeight / 3)
+                                .animateItem()
+                                .clickable { onItemClick(index) }
+                        )
+                    }
+
                 }
 
             }
-
         }
+    }
+    else {
+        ErrorBox(
+            text = stringResource(R.string.label_cities_not_found_add),
+            modifier = modifier.fillMaxSize().imePadding(),
+            color = GreyTextColor
+        )
     }
 }
 
@@ -145,23 +167,54 @@ private fun SearchList(
     highLightText: String = "",
     onItemClick: (key: String) -> Unit = {}
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .then(modifier),
-    ) {
-        itemsIndexed(
-            items = searchCitesList,
-            key = { _, searchItem -> searchItem.key }) { index, searchItem ->
-            Column(modifier = Modifier.clickable(onClick = { onItemClick(searchItem.key) })) {
-                SearchCityItem(
-                    searchItem = searchItem,
-                    highLightText = highLightText,
-                )
-                if (index != searchCitesList.lastIndex) {
-                    HorizontalDivider()
+    if (searchCitesList.isNotEmpty()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(modifier),
+        ) {
+            itemsIndexed(
+                items = searchCitesList,
+                key = { _, searchItem -> searchItem.key }) { index, searchItem ->
+                Column(modifier = Modifier.clickable(onClick = { onItemClick(searchItem.key) })) {
+                    SearchCityItem(
+                        searchItem = searchItem,
+                        highLightText = highLightText,
+                    )
+                    if (index != searchCitesList.lastIndex) {
+                        HorizontalDivider()
+                    }
                 }
             }
+        }
+    } else {
+        ErrorBox(
+            text = stringResource(R.string.label_cities_not_found),
+            modifier = modifier.fillMaxSize().imePadding(),
+            color = WhiteColor)
+    }
+}
+
+@Composable
+private fun ErrorBox(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified
+) {
+    Box(
+        modifier = Modifier.then(modifier),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(painter = painterResource(R.drawable.ic_city),
+                tint = color,
+                contentDescription = null,
+                modifier = Modifier.size(128.dp))
+            Text(
+                text = text,
+                style = Typography.bodyLarge,
+                color = color
+            )
         }
     }
 }

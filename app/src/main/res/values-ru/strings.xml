@@ -20,4 +20,6 @@
     <string name="label_day">Днем</string>
     <string name="label_current_location">Текущее местоположение</string>
     <string name="label_im_here">Я тут</string>
+    <string name="label_cities_not_found">Города не найдены</string>
+    <string name="label_cities_not_found_add">Добавьте город</string>
 </resources> 
