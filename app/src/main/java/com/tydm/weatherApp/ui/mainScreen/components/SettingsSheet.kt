@@ -79,7 +79,7 @@ fun SettingsSheet(
                 } else {
                     SearchList(
                         searchCitesList = searchCitesList,
-                        highLightText = textFieldValue.text,
+                        highLightText = textFieldValue.text.trim(),
                         onItemClick = {  onSearchItemClick(it) },
                         modifier = Modifier
                             .weight(0.5f)

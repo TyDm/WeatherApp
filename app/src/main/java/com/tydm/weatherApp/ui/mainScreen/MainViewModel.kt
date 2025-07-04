@@ -173,7 +173,7 @@ class MainViewModel @Inject constructor(
         job?.cancel()
         job = viewModelScope.launch {
             delay(500)
-            when (val result = searchCityUseCase(query)) {
+            when (val result = searchCityUseCase(query.trim())) {
                 is WeatherResult.Success -> {
                     val sortedList = result.data.sortedBy { it.rank }
                     _state.update {
