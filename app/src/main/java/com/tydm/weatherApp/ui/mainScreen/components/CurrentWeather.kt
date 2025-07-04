@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.tydm.weatherApp.R
 import com.tydm.weatherApp.domain.model.City
 import com.tydm.weatherApp.domain.model.Weather
-import com.tydm.weatherApp.ui.theme.GreyText
+import com.tydm.weatherApp.ui.theme.GreyTextColor
 import com.tydm.weatherApp.ui.theme.Typography
 import com.tydm.weatherApp.ui.theme.WeatherAppTheme
 
@@ -46,7 +46,7 @@ fun WeatherMain(
         Text(text = weather.conditionText, style = Typography.bodyLarge)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "${stringResource(R.string.feels_like)} ${weather.realFeelTemperatureMetric}°",
+            text = "${stringResource(R.string.label_feels_like)} ${weather.realFeelTemperatureMetric}°",
             style = Typography.bodyLarge
         )
         Spacer(modifier = Modifier.height(32.dp))
@@ -72,13 +72,13 @@ fun WeatherDetails(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = stringResource(R.string.wind),
+                text = stringResource(R.string.label_wind),
                 style = Typography.bodyLarge,
-                color = GreyText
+                color = GreyTextColor
             )
             Text(
                 modifier = Modifier.padding(top = 8.dp),
-                text = "${weather.windMetric} ${stringResource(R.string.speed_ms)}",
+                text = "${weather.windMetric} ${stringResource(R.string.label_speed_ms)}",
                 style = Typography.headlineSmall
             )
         }
@@ -86,9 +86,9 @@ fun WeatherDetails(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = stringResource(R.string.humidity),
+                text = stringResource(R.string.label_humidity),
                 style = Typography.bodyLarge,
-                color = GreyText,
+                color = GreyTextColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -102,9 +102,9 @@ fun WeatherDetails(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = stringResource(R.string.precipitation),
+                text = stringResource(R.string.label_precipitation),
                 style = Typography.bodyLarge,
-                color = GreyText,
+                color = GreyTextColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

@@ -15,6 +15,7 @@ data class CityEntity(
     val administrativeArea: String,
     val gmtOffset: Int,
     val languageCode: String,
+    val order: Int = 0
 )
 
 @Entity(

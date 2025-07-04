@@ -8,10 +8,16 @@
     <string name="error_database">Ошибка базы данных</string>
     <string name="error_unknown">Неизвестная ошибка</string>
     <string name="error_loading">Произошла ошибка при загрузке данных. \nПопробуйте обновить страницу</string>
-    <string name="feels_like">Ощущается как</string>
-    <string name="wind">Ветер</string>
-    <string name="humidity">Влажность</string>
-    <string name="precipitation">Осадки</string>
-    <string name="speed_ms">м/с</string>
-    <string name="search">Поиск</string>
+    <string name="label_feels_like">Ощущается как</string>
+    <string name="label_wind">Ветер</string>
+    <string name="label_humidity">Влажность</string>
+    <string name="label_precipitation">Осадки</string>
+    <string name="label_speed_ms">м/с</string>
+    <string name="label_search">Поиск</string>
+    <string name="label_tomorrow">Завтра</string>
+    <string name="label_today">Сегодня</string>
+    <string name="label_night">Ночью</string>
+    <string name="label_day">Днем</string>
+    <string name="label_current_location">Текущее местоположение</string>
+    <string name="label_im_here">Я тут</string>
 </resources> 

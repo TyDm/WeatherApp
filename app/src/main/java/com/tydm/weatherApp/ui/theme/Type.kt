@@ -27,11 +27,13 @@ val Typography = Typography(
     headlineSmall = TextStyle(
         fontFamily = montFamily,
         fontSize = 20.sp,
+        lineHeight = 28.sp,
         color = WhiteColor
     ),
     bodyLarge = TextStyle(
         fontFamily = montFamily,
         fontSize = 16.sp,
+        lineHeight = 20.sp,
         color = WhiteColor
     ),
     bodyMedium = TextStyle(

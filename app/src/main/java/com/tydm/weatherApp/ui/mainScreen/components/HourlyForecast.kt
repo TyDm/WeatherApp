@@ -3,22 +3,27 @@ package com.tydm.weatherApp.ui.mainScreen.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tydm.weatherApp.domain.model.HourlyForecast
-import com.tydm.weatherApp.ui.theme.GreyText
+import com.tydm.weatherApp.ui.theme.GreyTextColor
 import com.tydm.weatherApp.ui.theme.Typography
 import com.tydm.weatherApp.ui.theme.WeatherAppTheme
+import com.tydm.weatherApp.ui.theme.WhiteColor
+import com.tydm.weatherApp.ui.util.WeatherIconProvider
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
@@ -68,11 +73,18 @@ private fun HourlyForecastItem(
         Text(
             text = timeFormatter.format(localDateTime),
             style = Typography.bodyLarge,
-            color = GreyText
+            color = GreyTextColor
         )
+        Spacer(modifier = Modifier.height(8.dp))
+        Icon(
+            painter = painterResource(id = WeatherIconProvider.getIconRes(hourlyForecast.conditionCode)),
+            contentDescription = hourlyForecast.conditionText,
+            tint = WhiteColor,
+            modifier = Modifier.size(24.dp),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
-            modifier = Modifier.padding(top = 8.dp),
-            text = "${hourlyForecast.temperatureMetric.roundToInt()}°",
+            text = " ${hourlyForecast.temperatureMetric.roundToInt()}°",
             style = Typography.headlineSmall
         )
     }

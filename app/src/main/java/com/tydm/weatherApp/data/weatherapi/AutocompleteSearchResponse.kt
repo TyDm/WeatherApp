@@ -2,21 +2,6 @@ package com.tydm.weatherApp.data.weatherapi
 
 import com.google.gson.annotations.SerializedName
 
-data class AutocompleteSearchResponse(
-
-	@field:SerializedName("AutocompleteSearchResponse")
-	val autocompleteSearchList: List<AutocompleteSearchResponseItem?>? = null
-)
-
-data class AdministrativeArea(
-
-	@field:SerializedName("LocalizedName")
-	val localizedName: String? = null,
-
-	@field:SerializedName("ID")
-	val iD: String? = null
-)
-
 data class AutocompleteSearchResponseItem(
 
 	@field:SerializedName("AdministrativeArea")
@@ -39,6 +24,15 @@ data class AutocompleteSearchResponseItem(
 
 	@field:SerializedName("Key")
 	val key: String? = null
+)
+
+data class AdministrativeArea(
+
+	@field:SerializedName("LocalizedName")
+	val localizedName: String? = null,
+
+	@field:SerializedName("ID")
+	val iD: String? = null
 )
 
 data class Country(

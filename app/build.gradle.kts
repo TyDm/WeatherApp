@@ -42,10 +42,10 @@ android {
 
     defaultConfig {
         applicationId = "com.tydm.weatherApp"
-        minSdk = 28
+        minSdk = 23
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1"
+        versionName = "1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -85,6 +85,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -131,6 +132,8 @@ dependencies {
 
     implementation(libs.logging.interceptor)
     implementation(libs.okhttp)
+
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     // Testing
     testImplementation(libs.mockk)

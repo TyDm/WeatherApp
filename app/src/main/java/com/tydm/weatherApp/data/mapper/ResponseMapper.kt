@@ -4,16 +4,18 @@ import com.tydm.weatherApp.data.local.entity.CityEntity
 import com.tydm.weatherApp.data.local.entity.DailyForecastEntity
 import com.tydm.weatherApp.data.local.entity.HourlyForecastEntity
 import com.tydm.weatherApp.data.local.entity.WeatherEntity
+import com.tydm.weatherApp.data.weatherapi.AutocompleteSearchResponseItem
 import com.tydm.weatherApp.data.weatherapi.CityResponse
 import com.tydm.weatherApp.data.weatherapi.CurrentWeatherItem
 import com.tydm.weatherApp.data.weatherapi.DailyForecastResponse
 import com.tydm.weatherApp.data.weatherapi.HourlyForecastResponseItem
+import com.tydm.weatherApp.domain.model.SearchItem
 import kotlin.math.roundToInt
 
 private fun imperialTempToMetricInt(value: Double): Int = ((value - 32) / 1.8).roundToInt()
 private fun imperialTempToMetricFloat(value: Double): Float = ((value - 32) / 1.8).toFloat()
 
-fun CityResponse.toEntity(languageCode: String): CityEntity =
+fun CityResponse.toEntity(languageCode: String, order: Int): CityEntity =
     if (key != null &&
         localizedName != null &&
         country?.localizedName != null &&
@@ -26,12 +28,13 @@ fun CityResponse.toEntity(languageCode: String): CityEntity =
             country = country.localizedName,
             administrativeArea = administrativeArea.localizedName,
             gmtOffset = timeZone.gmtOffset,
-            languageCode = languageCode
+            languageCode = languageCode,
+            order = order
         )
     else throw IllegalStateException("Invalid city response")
 
-fun CityResponse.toEntity(languageCode: String, id: Int): CityEntity =
-    toEntity(languageCode).copy(id = id)
+fun CityResponse.toEntity(languageCode: String, id: Int, order: Int): CityEntity =
+    toEntity(languageCode, order).copy(id = id)
 
 fun List<CurrentWeatherItem>.toWeatherEntity(cityId: Int, atmPrecipitation: Int): WeatherEntity {
     val currentWeatherItem = firstOrNull() ?: throw IllegalStateException("Empty weather response")
@@ -106,3 +109,24 @@ fun List<HourlyForecastResponseItem>.toHourlyForecastEntityList(cityId: Int): Li
             )
         } else throw IllegalStateException("Invalid hourly forecast response")
     }
+
+fun List<AutocompleteSearchResponseItem>.toSearchItemList(): List<SearchItem> {
+    return map { item ->
+        if (
+            item.key != null &&
+            item.localizedName != null &&
+            item.country?.localizedName != null &&
+            item.administrativeArea?.localizedName != null &&
+            item.rank != null) {
+            SearchItem(
+                key = item.key,
+                name = item.localizedName,
+                administrativeArea = item.administrativeArea.localizedName,
+                country = item.country.localizedName,
+                type = item.type?: "",
+                rank = item.rank
+            )
+        }
+        else throw IllegalStateException("Invalid autocomplete search response")
+    }
+}

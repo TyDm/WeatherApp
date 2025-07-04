@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tydm.weatherApp.ui.theme.GreyText
+import com.tydm.weatherApp.ui.theme.GreyTextColor
 import com.tydm.weatherApp.ui.theme.WhiteColor
 
 @Composable
@@ -28,7 +28,7 @@ fun BottomBar(
             for (i in 0 until pagerState.pageCount) {
                 Canvas(modifier = Modifier.size(30.dp)) {
                     drawCircle(
-                        color = if (i == pagerState.currentPage) WhiteColor else GreyText,
+                        color = if (i == pagerState.currentPage) WhiteColor else GreyTextColor,
                         radius = 5.dp.toPx()
                     )
                 }

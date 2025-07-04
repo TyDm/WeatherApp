@@ -23,4 +23,6 @@ class GetWeatherUseCase @Inject constructor(
     
     fun getHourlyForecast(cityId: Int): Flow<WeatherResult<List<HourlyForecast>>> =
         repository.getHourlyForecast(cityId)
+
+    suspend fun moveCityToTop(cityId: Int) = repository.moveCityToTop(cityId)
 } 

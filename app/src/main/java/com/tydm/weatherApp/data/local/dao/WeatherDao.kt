@@ -16,7 +16,7 @@ interface WeatherDao {
     @Update
     suspend fun updateCity(city: CityEntity)
 
-    @Query("SELECT * FROM cities")
+    @Query("SELECT * FROM cities ORDER BY `order` ASC")
     fun getCities(): Flow<List<CityEntity>>
 
     @Query("SELECT * FROM cities WHERE id = :id")

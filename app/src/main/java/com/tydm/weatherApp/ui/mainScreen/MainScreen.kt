@@ -2,6 +2,7 @@
 
 package com.tydm.weatherApp.ui.mainScreen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -26,9 +29,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
@@ -43,12 +46,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tydm.weatherApp.R
@@ -57,6 +64,7 @@ import com.tydm.weatherApp.domain.model.DailyForecast
 import com.tydm.weatherApp.domain.model.HourlyForecast
 import com.tydm.weatherApp.domain.model.Weather
 import com.tydm.weatherApp.ui.mainScreen.components.BottomBar
+import com.tydm.weatherApp.ui.mainScreen.components.DailyForecastColumn
 import com.tydm.weatherApp.ui.mainScreen.components.HourlyForecastRow
 import com.tydm.weatherApp.ui.mainScreen.components.SearchButton
 import com.tydm.weatherApp.ui.mainScreen.components.SettingsSheet
@@ -74,12 +82,17 @@ fun MainScreen(
     viewModel: MainViewModel
 ) {
     val viewModelState by viewModel.state.collectAsState()
-    val isListWasLoaded by viewModel.isListWasLoaded.collectAsState()
+    val effect by viewModel.effect.collectAsState()
+
     val pagerState = rememberPagerState { viewModelState.cities.size }
     val pullToRefreshState = rememberPullToRefreshState()
     val snackBarHostState = remember { SnackbarHostState() }
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val sheetScaffoldState = rememberBottomSheetScaffoldState(bottomSheetState)
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    var searchTextFieldValue by rememberSaveable(stateSaver = TextFieldValue.Saver)
+    { mutableStateOf(TextFieldValue("")) }
     val maxSheetOffset = LocalWindowInfo.current.containerSize.height.toFloat()
     val sheetSwipeEnabled = remember {
         derivedStateOf {
@@ -89,7 +102,7 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
 
     BottomSheetScaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState) },
+        snackbarHost = { SnackbarHost(snackBarHostState, modifier = Modifier.navigationBarsPadding().imePadding()) },
         scaffoldState = sheetScaffoldState,
         sheetContainerColor = Color.Transparent,
         sheetDragHandle = null,
@@ -98,28 +111,69 @@ fun MainScreen(
         sheetContent = {
             SettingsSheet(
                 citiesList = viewModelState.cities,
-                onClickDelete = { viewModel.handleIntent(MainScreenIntent.DeleteCity(it)) }
+                searchCitesList = viewModelState.searchCitiesList,
+                textFieldValue = searchTextFieldValue,
+                isLoading = viewModelState.isLoading,
+                onCurrentLocationClick = { viewModel.handleIntent(MainScreenIntent.MoveCityToTop(it)) },
+                onClickDelete = { viewModel.handleIntent(MainScreenIntent.DeleteCity(id = it)) },
+                onSearchItemClick = {
+                    viewModel.handleIntent(MainScreenIntent.AddCity(locationKey = it))
+                    scope.launch {
+                        keyboardController?.hide()
+                        bottomSheetState.hide() }
+                },
+                onCityCardClick = {
+                    scope.launch {
+                        pagerState.scrollToPage(it)
+                        bottomSheetState.hide()
+                    }
+                },
+                onValueChange = {
+                    searchTextFieldValue = it
+                    viewModel.handleIntent(MainScreenIntent.SearchCity(cityName = it.text))
+                }
             )
         }
     ) { paddingValues ->
 
-        LaunchedEffect(viewModelState.error) {
-            if (viewModelState.error != null) {
-                val result = snackBarHostState.showSnackbar(
-                    message = viewModelState.error.toString(),
-                    withDismissAction = true
-                )
-                when (result) {
-                    SnackbarResult.ActionPerformed -> viewModel.handleIntent(MainScreenIntent.DismissError)
-                    SnackbarResult.Dismissed -> viewModel.handleIntent(MainScreenIntent.DismissError)
+        LaunchedEffect(effect) {
+            val e = effect ?: return@LaunchedEffect
+            when (e) {
+                is MainScreenEffect.ShowError -> {
+                    snackBarHostState.showSnackbar(
+                        message = e.message,
+                        withDismissAction = true
+                    )
+                    viewModel.handleIntent(MainScreenIntent.ClearEffect)
+                }
+
+                is MainScreenEffect.ScrollToCity -> {
+                    val index = viewModelState.cities.indexOfFirst { it.city.id == e.cityId }
+                    if (index != -1) {
+                        pagerState.animateScrollToPage(index)
+                    }
+                    viewModel.handleIntent(MainScreenIntent.ClearEffect)
+                }
+
+                is MainScreenEffect.ShowBottomSheet -> {
+                    bottomSheetState.show()
+                    viewModel.handleIntent(MainScreenIntent.ClearEffect)
                 }
             }
         }
 
-        LaunchedEffect(isListWasLoaded, viewModelState.cities) {
-            if (isListWasLoaded && viewModelState.cities.isEmpty()){
-                bottomSheetState.show()
+        LaunchedEffect(bottomSheetState.currentValue) {
+            if (bottomSheetState.currentValue == SheetValue.Hidden) {
+                searchTextFieldValue = TextFieldValue("")
             }
+        }
+
+        BackHandler(enabled = searchTextFieldValue.text.isNotEmpty()) {
+            searchTextFieldValue = TextFieldValue("")
+        }
+
+        BackHandler(enabled = searchTextFieldValue.text.isEmpty() && bottomSheetState.isVisible) {
+            scope.launch { bottomSheetState.hide() }
         }
 
         Box(
@@ -146,6 +200,7 @@ fun MainScreen(
                 openSettings = { scope.launch { bottomSheetState.show(); } },
                 modifier = Modifier
                     .statusBarsPadding()
+                    .navigationBarsPadding()
                     .graphicsLayer(
                         alpha =
                             (bottomSheetState.currentOffset() / maxSheetOffset).coerceIn(0f, 1f)
@@ -232,7 +287,7 @@ private fun MainScreenWeather(
                                                 modifier = Modifier
                                                     .padding(horizontal = 32.dp)
                                             )
-                                            Spacer(modifier = Modifier.height(32.dp))
+                                            Spacer(modifier = Modifier.height(16.dp))
                                         }
                                     }
                                     item {
@@ -240,7 +295,14 @@ private fun MainScreenWeather(
                                             hourlyForecastList = state.cities[page].hourlyForecasts,
                                             gmtOffset = state.cities[page].city.gmtOffset
                                         )
-                                        Spacer(modifier = Modifier.height(32.dp))
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
+                                    item {
+                                        DailyForecastColumn(
+                                            dailyForecastList = state.cities[page].dailyForecasts,
+                                            gmtOffset = state.cities[page].city.gmtOffset,
+                                            modifier = Modifier.padding(horizontal = 16.dp)
+                                        )
                                     }
                                 }
                             }

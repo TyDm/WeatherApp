@@ -8,10 +8,16 @@
     <string name="error_database">Database error</string>
     <string name="error_unknown">Unknown error</string>
     <string name="error_loading">There was an error loading data. \nTry refreshing the page.</string>
-    <string name="feels_like">Feels like</string>
-    <string name="wind">Wind</string>
-    <string name="humidity">Humidity</string>
-    <string name="precipitation">Precipitation</string>
-    <string name="speed_ms">m/s</string>
-    <string name="search">Search</string>
+    <string name="label_feels_like">Feels like</string>
+    <string name="label_wind">Wind</string>
+    <string name="label_humidity">Humidity</string>
+    <string name="label_precipitation">Precipitation</string>
+    <string name="label_speed_ms">m/s</string>
+    <string name="label_search">Search</string>
+    <string name="label_tomorrow">Tomorrow</string>
+    <string name="label_today">Today</string>
+    <string name="label_night">Night</string>
+    <string name="label_day">Day</string>
+    <string name="label_current_location">Current location</string>
+    <string name="label_im_here">I\'m here</string>
 </resources> 

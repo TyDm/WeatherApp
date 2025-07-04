@@ -27,13 +27,14 @@ class AddCityUseCaseTest {
         val locationKey = "123456"
         coEvery { 
             repository.addCity(locationKey)
-        } returns WeatherResult.Success(Unit)
+        } returns WeatherResult.Success(1)
 
         // When
         val result = useCase(locationKey)
 
         // Then
         assertThat(result).isInstanceOf(WeatherResult.Success::class.java)
+        assertThat((result as WeatherResult.Success).data).isEqualTo(1)
     }
     
     @Test

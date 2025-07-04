@@ -1,7 +1,9 @@
 package com.tydm.weatherApp.ui.mainScreen.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,75 +13,156 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tydm.weatherApp.domain.model.City
 import com.tydm.weatherApp.domain.model.DailyForecast
 import com.tydm.weatherApp.domain.model.HourlyForecast
+import com.tydm.weatherApp.domain.model.SearchItem
 import com.tydm.weatherApp.domain.model.Weather
 import com.tydm.weatherApp.ui.model.CityWeatherData
+import com.tydm.weatherApp.ui.theme.GreyColor
 import com.tydm.weatherApp.ui.theme.WeatherAppTheme
 
 @Composable
 fun SettingsSheet(
     citiesList: List<CityWeatherData>,
-    onClickDelete: (id: Int) -> Unit,
+    searchCitesList: List<SearchItem>,
+    textFieldValue: TextFieldValue,
     modifier: Modifier = Modifier,
-    lazyListState: LazyListState = rememberLazyListState()
+    onClickDelete: (id: Int) -> Unit = {},
+    onCurrentLocationClick: (id: Int) -> Unit = {},
+    onSearchItemClick: (key: String) -> Unit = {},
+    onCityCardClick: (index: Int) -> Unit = {},
+    isLoading: Boolean = false,
+    lazyListState: LazyListState = rememberLazyListState(),
+    onValueChange: (textFieldValue: TextFieldValue) -> Unit = {}
 ) {
-    val snapFlingBehavior = rememberSnapFlingBehavior(
-        lazyListState = lazyListState,
-        snapPosition = SnapPosition.End
-    )
     Column(
         modifier = Modifier
             .fillMaxSize()
             .then(modifier),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.weight(0.1f))
+        Spacer(modifier = Modifier.weight(0.05f))
         SearchTextField(
-            onValueChange = {},
+            textFieldValue = textFieldValue,
+            onValueChange = { onValueChange(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp)
         )
-        Spacer(modifier = Modifier.weight(0.05f))
-        BoxWithConstraints(modifier = Modifier.weight(0.5f)) {
-            LazyColumn(
-                state = lazyListState,
-                flingBehavior = snapFlingBehavior,
-                modifier = Modifier.fillMaxSize(),
-                reverseLayout = true
-            ) {
-                items(
-                    items = citiesList,
-                    key = { cityWeatherData -> cityWeatherData.city.id }
-                )
-                { cityWeatherData ->
+        Spacer(modifier = Modifier.height(16.dp))
+        when (isLoading) {
+            true -> Box(modifier = Modifier.weight(0.5f).padding(top = 32.dp)) {
+                CircularProgressIndicator(color = GreyColor)
+            }
 
-                    cityWeatherData.currentWeather?.let {
-                        CityCard(
-                            city = cityWeatherData.city,
-                            currentWeather = cityWeatherData.currentWeather,
-                            onClickDelete = { onClickDelete(cityWeatherData.city.id) },
-                            modifier = Modifier
-                                .height(this@BoxWithConstraints.maxHeight / 3)
-                                .animateItem()
-                        )
-                    }
+            false -> {
+                if (textFieldValue.text.isEmpty()) {
+                    CityCardList(
+                        citiesList = citiesList,
+                        lazyListState = lazyListState,
+                        onClickImHere = { onCurrentLocationClick(it) },
+                        onClickDelete = onClickDelete,
+                        onItemClick = { onCityCardClick(it) },
+                        modifier = Modifier.weight(0.5f)
+                    )
+                } else {
+                    SearchList(
+                        searchCitesList = searchCitesList,
+                        highLightText = textFieldValue.text,
+                        onItemClick = {  onSearchItemClick(it) },
+                        modifier = Modifier
+                            .weight(0.5f)
+                            .padding(horizontal = 16.dp)
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.weight(0.1f))
+    }
+}
 
+@Composable
+private fun CityCardList(
+    citiesList: List<CityWeatherData>,
+    lazyListState: LazyListState,
+    modifier: Modifier = Modifier,
+    onClickImHere: (id: Int) -> Unit = {},
+    onItemClick: (index: Int) -> Unit = {},
+    onClickDelete: (id: Int) -> Unit = {}
+) {
+    val snapFlingBehavior = rememberSnapFlingBehavior(
+        lazyListState = lazyListState,
+        snapPosition = SnapPosition.End
+    )
+    BoxWithConstraints(modifier = Modifier.then(modifier)) {
+        LazyColumn(
+            state = lazyListState,
+            flingBehavior = snapFlingBehavior,
+            modifier = Modifier.fillMaxSize(),
+            reverseLayout = true
+        ) {
+            itemsIndexed(
+                items = citiesList,
+                key = { _, cityWeatherData -> cityWeatherData.city.id }
+            )
+            { index, cityWeatherData ->
+
+                cityWeatherData.currentWeather?.let {
+                    CityCard(
+                        city = cityWeatherData.city,
+                        index = index,
+                        currentWeather = cityWeatherData.currentWeather,
+                        onClickImHere = { onClickImHere(cityWeatherData.city.id) },
+                        onClickDelete = { onClickDelete(cityWeatherData.city.id) },
+                        modifier = Modifier
+                            .height(this@BoxWithConstraints.maxHeight / 3)
+                            .animateItem()
+                            .clickable{ onItemClick(index) }
+                    )
                 }
 
             }
-        }
 
-        Spacer(modifier = Modifier.weight(0.1f))
+        }
+    }
+}
+
+@Composable
+private fun SearchList(
+    searchCitesList: List<SearchItem>,
+    modifier: Modifier = Modifier,
+    highLightText: String = "",
+    onItemClick: (key: String) -> Unit = {}
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(modifier),
+    ) {
+        itemsIndexed(
+            items = searchCitesList,
+            key = { _, searchItem -> searchItem.key }) { index, searchItem ->
+            Column(modifier = Modifier.clickable(onClick = { onItemClick(searchItem.key) })) {
+                SearchCityItem(
+                    searchItem = searchItem,
+                    highLightText = highLightText,
+                )
+                if (index != searchCitesList.lastIndex) {
+                    HorizontalDivider()
+                }
+            }
+        }
     }
 }
 
@@ -118,7 +201,44 @@ private fun SettingsScreenPreview() {
     WeatherAppTheme {
         SettingsSheet(
             citiesList = cities,
-            onClickDelete = {}
+            searchCitesList = listOf(),
+            textFieldValue = TextFieldValue(""),
+        )
+
+    }
+}
+
+@Preview(backgroundColor = 0xFF222524, showBackground = true)
+@Composable
+private fun SettingsScreenWithSearchPreview() {
+    val searchItem = SearchItem(
+        key = "0",
+        name = "Moscow",
+        administrativeArea = "Moscow",
+        country = "Russia",
+        rank = 5,
+        type = "City"
+    )
+    val cities = listOf<SearchItem>(
+        searchItem,
+        searchItem.copy(
+            key = "1",
+            name = "Saint Petersburg",
+            administrativeArea = "Saint Petersburg",
+            rank = 4
+        ),
+        searchItem.copy(
+            key = "2",
+            name = "Novosibirsk",
+            administrativeArea = "Novosibirsk",
+            rank = 3
+        ),
+        searchItem.copy(key = "3", name = "Krasnodar", administrativeArea = "Krasnodar", rank = 2),
+    )
+
+    WeatherAppTheme {
+        SearchList(
+            searchCitesList = cities
         )
 
     }

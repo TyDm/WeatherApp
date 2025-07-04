@@ -8,11 +8,14 @@ import com.tydm.weatherApp.domain.model.WeatherResult
 import com.tydm.weatherApp.domain.usecase.AddCityUseCase
 import com.tydm.weatherApp.domain.usecase.DeleteCityUseCase
 import com.tydm.weatherApp.domain.usecase.GetWeatherUseCase
+import com.tydm.weatherApp.domain.usecase.SearchCityUseCase
 import com.tydm.weatherApp.domain.usecase.UpdateWeatherUseCase
 import com.tydm.weatherApp.ui.model.CityWeatherData
 import com.tydm.weatherApp.ui.util.AndroidErrorMessageProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -28,33 +31,30 @@ class MainViewModel @Inject constructor(
     private val getWeatherUseCase: GetWeatherUseCase,
     private val deleteCityUseCase: DeleteCityUseCase,
     private val updateWeatherUseCase: UpdateWeatherUseCase,
-    private val errorMessageProvider: AndroidErrorMessageProvider
+    private val errorMessageProvider: AndroidErrorMessageProvider,
+    private val searchCityUseCase: SearchCityUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainScreenState())
     val state: StateFlow<MainScreenState> = _state
 
-    private val _isListWasLoaded = MutableStateFlow(false)
-    val isListWasLoaded: StateFlow<Boolean> = _isListWasLoaded
+    private val _effect = MutableStateFlow<MainScreenEffect?>(null)
+    val effect: StateFlow<MainScreenEffect?> = _effect
+
+    private var job: Job? = null
 
     init {
-//        addCity("295146")
-//        addCity("294459")
-//        addCity("289484")
-//        addCity("294021")
         observeCities()
     }
-    //INSERT INTO cities
-    //SELECT * FROM cities_backup
-//    INSERT INTO current_weather
-//    SELECT * FROM current_Weather_backup
 
     fun handleIntent(intent: MainScreenIntent) {
         when (intent) {
             is MainScreenIntent.AddCity -> addCity(intent.locationKey)
             is MainScreenIntent.DeleteCity -> deleteCity(intent.id)
             is MainScreenIntent.UpdateWeather -> updateWeather(intent.cityId)
-            is MainScreenIntent.DismissError -> dismissError()
+            is MainScreenIntent.ClearEffect -> clearEffect()
+            is MainScreenIntent.SearchCity -> searchCity(intent.cityName)
+            is MainScreenIntent.MoveCityToTop -> moveCityToTop(intent.cityId)
         }
     }
 
@@ -90,12 +90,8 @@ class MainViewModel @Inject constructor(
                         }
 
                         is WeatherResult.Error -> {
-                            _state.update {
-                                it.copy(
-                                    error = errorMessageProvider.getMessage(result.error),
-                                    isLoading = false
-                                )
-                            }
+                            _effect.value = MainScreenEffect
+                                .ShowError(errorMessageProvider.getMessage(result.error))
                             flowOf(emptyList<CityWeatherData>())
                         }
                     }
@@ -103,10 +99,12 @@ class MainViewModel @Inject constructor(
                 .collect { cityWeatherDataList ->
                     _state.update {
                         it.copy(
-                            cities = cityWeatherDataList
+                            cities = cityWeatherDataList,
                         )
                     }
-                    _isListWasLoaded.update { true }
+                    if (cityWeatherDataList.isEmpty()) {
+                        _effect.value = MainScreenEffect.ShowBottomSheet
+                    }
                 }
         }
     }
@@ -120,10 +118,11 @@ class MainViewModel @Inject constructor(
                 }
 
                 is WeatherResult.Error -> {
+                    _effect.value = MainScreenEffect
+                        .ShowError(errorMessageProvider.getMessage(result.error))
                     _state.update {
                         it.copy(
                             isRefreshing = false,
-                            error = errorMessageProvider.getMessage(result.error)
                         )
                     }
                 }
@@ -131,42 +130,66 @@ class MainViewModel @Inject constructor(
         }
     }
 
-
     private fun deleteCity(id: Int) {
         viewModelScope.launch {
             when (val result = deleteCityUseCase(id)) {
-                is WeatherResult.Success -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false
-                        )
-                    }
-                }
+                is WeatherResult.Success -> {}
 
                 is WeatherResult.Error -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = errorMessageProvider.getMessage(result.error)
-                        )
-                    }
+                    _effect.value = MainScreenEffect
+                        .ShowError(errorMessageProvider.getMessage(result.error))
                 }
             }
         }
     }
 
     private fun addCity(locationKey: String) {
+        val existingCity = state.value.cities.find { it.city.locationKey == locationKey }
+        if (existingCity != null) {
+            _effect.value = MainScreenEffect.ScrollToCity(existingCity.city.id)
+            return
+        }
         viewModelScope.launch {
             when (val result = addCityUseCase(locationKey)) {
                 is WeatherResult.Success -> {
-                    _state.update { it.copy(isLoading = false) }
+                    _effect.value = MainScreenEffect.ScrollToCity(result.data)
                 }
 
                 is WeatherResult.Error -> {
+                    _effect.value = MainScreenEffect
+                        .ShowError(errorMessageProvider.getMessage(result.error))
+                }
+            }
+        }
+    }
+
+    private fun searchCity(query: String) {
+        if (query.isEmpty()) {
+            _state.update { it.copy(isLoading = false) }
+            job?.cancel()
+            return
+        }
+        _state.update { it.copy(isLoading = true) }
+        job?.cancel()
+        job = viewModelScope.launch {
+            delay(500)
+            when (val result = searchCityUseCase(query)) {
+                is WeatherResult.Success -> {
+                    val sortedList = result.data.sortedBy { it.rank }
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            error = errorMessageProvider.getMessage(result.error)
+                            searchCitiesList = sortedList
+                        )
+                    }
+                }
+
+                is WeatherResult.Error -> {
+                    _effect.value = MainScreenEffect
+                        .ShowError(errorMessageProvider.getMessage(result.error))
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
                         )
                     }
                 }
@@ -174,8 +197,13 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private fun clearEffect() {
+        _effect.value = null
+    }
 
-    private fun dismissError() {
-        _state.update { it.copy(error = null) }
+    private fun moveCityToTop(cityId: Int) {
+        viewModelScope.launch {
+            getWeatherUseCase.moveCityToTop(cityId)
+        }
     }
 }

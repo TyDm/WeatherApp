@@ -11,7 +11,7 @@ interface AccuweatherApi {
     suspend fun getCitiesListByName(
         @Query("q") cityName: String,
         @Query("language") language: String
-    ): Response<AutocompleteSearchResponse>
+    ): Response<List<AutocompleteSearchResponseItem>>
 
     @GET("locations/v1/{locationKey}")
     suspend fun getCityInfoByLocationKey(

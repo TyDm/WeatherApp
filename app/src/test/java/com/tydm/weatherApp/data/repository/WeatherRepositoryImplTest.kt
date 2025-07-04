@@ -119,7 +119,8 @@ class WeatherRepositoryImplTest {
         coEvery {
             weatherApi.getCityInfoByLocationKey(locationKey, language).body()
         } returns cityResponse
-        coEvery { weatherDao.insertCity(cityResponse.toEntity("en")) } returns 1L
+        coEvery { weatherDao.getCities() } returns flowOf(emptyList())
+        coEvery { weatherDao.insertCity(cityResponse.toEntity(language, 0)) } returns 1L
         coEvery {
             weatherApi.getDailyForecast(locationKey, language).body()
         } returns dailyForecastResponse
@@ -227,7 +228,8 @@ class WeatherRepositoryImplTest {
             country = "Russia",
             administrativeArea = "Moscow",
             gmtOffset = 3,
-            languageCode = "en"
+            languageCode = "en",
+            order = 0
         )
 
         coEvery { weatherDao.getCityById(cityId) } returns cityEntity

@@ -49,4 +49,13 @@ data class HourlyForecast(
     val conditionText: String,
     val conditionCode: Int,
     val mobileLink: String
-) 
+)
+
+data class SearchItem(
+    val key: String,
+    val name: String,
+    val administrativeArea: String,
+    val country: String,
+    val type: String,
+    val rank: Int
+)

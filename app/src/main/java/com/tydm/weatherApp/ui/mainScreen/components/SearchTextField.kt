@@ -12,39 +12,34 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tydm.weatherApp.ui.theme.BackgroundGreyColor
+import com.tydm.weatherApp.R
+import com.tydm.weatherApp.ui.theme.GreyColor
 import com.tydm.weatherApp.ui.theme.Typography
 import com.tydm.weatherApp.ui.theme.WeatherAppTheme
-import com.tydm.weatherApp.R
 
 @Composable
 fun SearchTextField(
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onValueChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
+    textFieldValue: TextFieldValue
 ) {
-    var textFieldValue by rememberSaveable(stateSaver = TextFieldValue.Saver)
-    { mutableStateOf(TextFieldValue("")) }
     TextField(
         value = textFieldValue,
-        onValueChange = { textFieldValue = it; onValueChange(it.text) },
-        placeholder = { Text(stringResource(R.string.search), style = Typography.bodyLarge, color = BackgroundGreyColor) },
+        onValueChange = { onValueChange(it) },
+        placeholder = { Text(stringResource(R.string.label_search), style = Typography.bodyLarge, color = GreyColor) },
         shape = RoundedCornerShape(24.dp),
         singleLine = true,
-        textStyle = Typography.headlineSmall,
+        textStyle = Typography.bodyLarge,
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = BackgroundGreyColor.copy(alpha = 0.2f),
-            unfocusedContainerColor = BackgroundGreyColor.copy(alpha = 0.2f),
-            errorContainerColor = BackgroundGreyColor.copy(alpha = 0.2f),
+            focusedContainerColor = GreyColor.copy(alpha = 0.2f),
+            unfocusedContainerColor = GreyColor.copy(alpha = 0.2f),
+            errorContainerColor = GreyColor.copy(alpha = 0.2f),
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             errorIndicatorColor = Color.Transparent
@@ -53,15 +48,13 @@ fun SearchTextField(
             Icon(
                 Icons.Filled.Search,
                 contentDescription = "Search",
-                tint = BackgroundGreyColor,
+                tint = GreyColor,
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
         },
         modifier = Modifier.height(50.dp).then(modifier)
-
     )
 }
-
 
 @Preview
 @Composable
@@ -69,6 +62,7 @@ private fun SearchTextFieldPreview() {
     WeatherAppTheme {
         SearchTextField(
             onValueChange = {},
+            textFieldValue = TextFieldValue(),
             modifier = Modifier.fillMaxWidth())
     }
 }

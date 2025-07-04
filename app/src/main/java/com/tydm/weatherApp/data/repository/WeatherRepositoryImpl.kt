@@ -1,22 +1,26 @@
 package com.tydm.weatherApp.data.repository
 
+import android.util.Log
 import com.tydm.weatherApp.data.local.dao.WeatherDao
 import com.tydm.weatherApp.data.mapper.toDailyForecastEntityList
 import com.tydm.weatherApp.data.mapper.toDomain
 import com.tydm.weatherApp.data.mapper.toEntity
 import com.tydm.weatherApp.data.mapper.toHourlyForecastEntityList
+import com.tydm.weatherApp.data.mapper.toSearchItemList
 import com.tydm.weatherApp.data.mapper.toWeatherEntity
 import com.tydm.weatherApp.data.weatherapi.AccuWeatherLanguages
 import com.tydm.weatherApp.data.weatherapi.AccuweatherApi
 import com.tydm.weatherApp.domain.model.City
 import com.tydm.weatherApp.domain.model.DailyForecast
 import com.tydm.weatherApp.domain.model.HourlyForecast
+import com.tydm.weatherApp.domain.model.SearchItem
 import com.tydm.weatherApp.domain.model.Weather
 import com.tydm.weatherApp.domain.model.WeatherError
 import com.tydm.weatherApp.domain.model.WeatherResult
 import com.tydm.weatherApp.domain.repository.WeatherRepository
 import com.tydm.weatherApp.util.toWeatherError
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import retrofit2.HttpException
@@ -30,16 +34,19 @@ class WeatherRepositoryImpl @Inject constructor(
     private val weatherLanguages: AccuWeatherLanguages,
 ) : WeatherRepository {
 
-    override suspend fun addCity(locationKey: String): WeatherResult<Unit> {
+    override suspend fun addCity(locationKey: String): WeatherResult<Int> {
         return try {
             val language = weatherLanguages.language
             val cityResponse = weatherApi.getCityInfoByLocationKey(locationKey, language)
             if (cityResponse.body() == null) throw HttpException(cityResponse)
-            val cityId = weatherDao.insertCity(cityResponse.body()!!.toEntity(language)).toInt()
+            val currentCities = weatherDao.getCities().first()
+            val maxOrder = currentCities.maxOfOrNull { it.order } ?: -1
+            val city = cityResponse.body()!!.toEntity(language, maxOrder + 1)
+            val cityId = weatherDao.insertCity(city).toInt()
 
             updateWeather(cityId, locationKey, language)
 
-            WeatherResult.Success(Unit)
+            WeatherResult.Success(cityId)
         } catch (e: Exception) {
             WeatherResult.Error(e.toWeatherError())
         }
@@ -80,7 +87,7 @@ class WeatherRepositoryImpl @Inject constructor(
                 cityId,
                 currentWeatherResponse.body()!!.toWeatherEntity(
                     cityId,
-                    dailyForecastResponse.body()!!.dailyForecasts?.get(0)?.day?.precipitationProbability ?: 0
+                    dailyForecastResponse.body()!!.dailyForecasts?.firstOrNull()?.day?.precipitationProbability ?: 0
                 )
             )
             
@@ -98,6 +105,7 @@ class WeatherRepositoryImpl @Inject constructor(
     override suspend fun deleteCity(id: Int): WeatherResult<Unit> {
         return try {
             weatherDao.deleteCity(id)
+            normalizeCityOrder()
             WeatherResult.Success(Unit)
         } catch (e: Exception) {
             WeatherResult.Error(WeatherError.DatabaseError(e))
@@ -151,4 +159,51 @@ class WeatherRepositoryImpl @Inject constructor(
             emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
         }
     }
-} 
+
+    override suspend fun searchCity(query: String): WeatherResult<List<SearchItem>> {
+        try {
+            val searchCityResponse = weatherApi.getCitiesListByName(
+                cityName = query,
+                language = weatherLanguages.language)
+            if (searchCityResponse.body() == null) {
+                Log.d("Exception","Exception on searchCity")
+                throw HttpException(searchCityResponse)
+            }
+            return WeatherResult.Success(searchCityResponse.body()!!.toSearchItemList())
+        } catch (e: Exception) {
+            return WeatherResult.Error(e.toWeatherError())
+        }
+    }
+
+
+    private suspend fun moveCityToTopInternal(cityId: Int) {
+        val cities = weatherDao.getCities().map { it }.first()
+        val target = cities.find { it.id == cityId } ?: return
+        val updatedCities = cities.map {
+            when {
+                it.id == cityId -> it.copy(order = 0)
+                it.order < target.order -> it.copy(order = it.order + 1)
+                else -> it
+            }
+        }
+        updatedCities.forEach { weatherDao.updateCity(it) }
+    }
+
+    override suspend fun moveCityToTop(cityId: Int): WeatherResult<Unit> {
+        return try {
+            moveCityToTopInternal(cityId)
+            WeatherResult.Success(Unit)
+        } catch (e: Exception) {
+            WeatherResult.Error(e.toWeatherError())
+        }
+    }
+
+    private suspend fun normalizeCityOrder() {
+        val cities = weatherDao.getCities().first()
+        cities.forEachIndexed { index, city ->
+            if (city.order != index) {
+                weatherDao.updateCity(city.copy(order = index))
+            }
+        }
+    }
+}
