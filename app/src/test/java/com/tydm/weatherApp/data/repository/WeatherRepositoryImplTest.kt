@@ -35,6 +35,7 @@ import com.tydm.weatherApp.domain.model.WeatherError
 import com.tydm.weatherApp.domain.model.WeatherResult
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -42,6 +43,7 @@ import org.junit.Before
 import org.junit.Test
 import retrofit2.HttpException
 import java.io.IOException
+import android.util.Log
 
 class WeatherRepositoryImplTest {
 
@@ -52,6 +54,9 @@ class WeatherRepositoryImplTest {
 
     @Before
     fun setup() {
+        mockkStatic(Log::class)
+        io.mockk.every { Log.e(any(), any(), any()) } returns 0
+        io.mockk.every { Log.e(any(), any()) } returns 0
         weatherDao = mockk(relaxed = true)
         weatherApi = mockk()
         weatherLanguage = mockk(relaxed = true)
