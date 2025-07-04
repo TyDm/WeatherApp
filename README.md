@@ -50,6 +50,7 @@ ACCUWEATHER_API_KEY=your_api_key_here
 - Domain: бизнес-логика и модели
 - Data: реализация репозиториев и работа с данными
 - Presentation: UI компоненты и ViewModels
+- Dependency Injection: внедрение зависимостей с помощью Hilt
 
 ## Используемые технологии
 
