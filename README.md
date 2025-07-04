@@ -23,6 +23,15 @@ ACCUWEATHER_API_KEY=your_api_key_here
 - Если вы получаете ошибку с кодом 503, значит лимит запросов закончился.
 - При отсутствии необходимых ключей сборка проекта завершится с ошибкой
 
+## Дизайн
+
+Почасовой и дневной прогноз.
+[Скриншот](images/Screenshot2.png)
+
+Каждой погоде назначается свой цвет фона.
+
+[Скриншот](images/Screenshot1.png)
+
 ## Архитектура
 
 Приложение построено с использованием Clean Architecture и включает следующие слои:
@@ -37,7 +46,7 @@ ACCUWEATHER_API_KEY=your_api_key_here
 - Jetpack Compose
 - Hilt для Dependency Injection
 - Retrofit для сетевых запросов
-- Room для локального хранения
+- Room для кеширования
 - Coroutines и Flow
 - Clean Architecture
 - Unit Tests 
