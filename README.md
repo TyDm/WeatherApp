@@ -26,11 +26,11 @@ ACCUWEATHER_API_KEY=your_api_key_here
 ## Дизайн
 
 Почасовой и дневной прогноз.
-[Скриншот](images/Screenshot2.png)
+![Скриншот](images/Screenshot2.png)
 
 Каждой погоде назначается свой цвет фона.
 
-[Скриншот](images/Screenshot1.png)
+![Скриншот](images/Screenshot1.png)
 
 ## Архитектура
 
