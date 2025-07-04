@@ -185,6 +185,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 is WeatherResult.Error -> {
+                    if (result.error.cause is kotlinx.coroutines.CancellationException) return@launch
                     _effect.value = MainScreenEffect
                         .ShowError(errorMessageProvider.getMessage(result.error))
                     _state.update {
