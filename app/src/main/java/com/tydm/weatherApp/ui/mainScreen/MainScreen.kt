@@ -49,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -229,16 +230,19 @@ private fun MainScreenWeather(
     refreshWeather: () -> Unit,
     openSettings: () -> Unit
 ) {
+    var searchButtonOffset by remember { mutableStateOf(0f) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .then(modifier)
     ) {
-        Spacer(modifier = Modifier.height(32.dp))
+//        Spacer(modifier = Modifier.height(32.dp))
         SearchButton(
             modifier = Modifier
                 .align(Alignment.End)
-                .offset(x = (-32).dp),
+                .offset(x = (-32).dp, y = 32.dp)
+                .graphicsLayer{translationY = searchButtonOffset},
             onClick = openSettings
         )
         Column(modifier = Modifier.weight(1f)) {
@@ -252,7 +256,10 @@ private fun MainScreenWeather(
                     page = page,
                     pagerState = pagerState,
                     pullToRefreshState = pullToRefreshState,
-                    refreshWeather = refreshWeather
+                    refreshWeather = refreshWeather,
+                    onScrollOffsetChanged = { offset ->
+                        searchButtonOffset = (-offset)
+                    }
                 )
             }
         }
@@ -266,13 +273,38 @@ private fun WeatherPage(
     page: Int,
     pagerState: PagerState,
     pullToRefreshState: PullToRefreshState,
-    refreshWeather: () -> Unit
+    refreshWeather: () -> Unit,
+    onScrollOffsetChanged: (Float) -> Unit
 ) {
     val columnLazyListState = rememberLazyListState()
     val snapFlingBehavior = rememberSnapFlingBehavior(
         lazyListState = columnLazyListState,
         snapPosition = SnapPosition.End
     )
+
+    LaunchedEffect(columnLazyListState) {
+        snapshotFlow {
+            val visibleItems = columnLazyListState.layoutInfo.visibleItemsInfo
+            val viewportStart = columnLazyListState.layoutInfo.viewportStartOffset
+
+            // Ищем первый item (который содержит WeatherMain)
+            val firstItem = visibleItems.find { it.index == 0 }
+
+            val scrollOffset = firstItem?.let { item ->
+                // Вычисляем позицию WeatherMain внутри первого item
+                // WeatherMain находится внизу первого item (после Spacer с weight(1f))
+                val weatherMainTop = item.offset + (item.size * 0.5f) // Примерно 80% от высоты item
+
+                // Если WeatherMain начал выходить за верхнюю границу viewport
+                val overlap = (viewportStart - weatherMainTop).coerceAtLeast(0f)
+                overlap
+            } ?: 0f
+
+            scrollOffset
+        }.collect { offset ->
+            onScrollOffsetChanged(offset)
+        }
+    }
 
     if (state.cities.isEmpty() || page >= state.cities.size) {
         Box(
