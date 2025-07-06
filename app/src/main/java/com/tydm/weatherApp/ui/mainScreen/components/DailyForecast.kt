@@ -58,7 +58,7 @@ fun DailyForecastColumn(
 }
 
 @Composable
-fun DailyForecastItem(
+private fun DailyForecastItem(
     dailyForecast: DailyForecast,
     gmtOffset: Int,
     modifier: Modifier = Modifier
@@ -69,7 +69,9 @@ fun DailyForecastItem(
     val localDateTime = instant.atZone(zoneId).toLocalDateTime()
 
     val dayOfWeekText = when {
-        localDateTime.toLocalDate().isEqual(today.plusDays(1)) -> stringResource(R.string.label_tomorrow)
+        localDateTime.toLocalDate()
+            .isEqual(today.plusDays(1)) -> stringResource(R.string.label_tomorrow)
+
         localDateTime.toLocalDate().isEqual(today) -> stringResource(R.string.label_today)
         else -> {
             val formatter = DateTimeFormatter.ofPattern("EEEE", Locale.getDefault())
@@ -90,7 +92,9 @@ fun DailyForecastItem(
             .then(modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+        Column(modifier = Modifier
+            .weight(1f)
+            .padding(end = 8.dp)) {
             Text(
                 text = dayOfWeekText,
                 style = Typography.bodyLarge,
