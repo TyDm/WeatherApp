@@ -41,7 +41,7 @@ import com.tydm.weatherApp.ui.util.WeatherIconProvider
 fun CityCard(
     city: City,
     index: Int,
-    currentWeather: Weather,
+    currentWeather: Weather?,
     modifier: Modifier = Modifier,
     onClickImHere: () -> Unit = {},
     onClickDelete: () -> Unit = {}
@@ -69,7 +69,8 @@ fun CityCard(
                         .fillMaxWidth()
                         .weight(0.3f),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     ResizableText(
                         text = city.name,
                         maxFontSize = Typography.displayMedium.fontSize,
@@ -79,18 +80,22 @@ fun CityCard(
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    Icon(
-                        painter = painterResource(WeatherIconProvider.getIconRes(currentWeather.conditionCode)),
-                        contentDescription = currentWeather.conditionText,
-                        modifier = modifier.size(32.dp),
-                        tint = WhiteColor
-                    )
+                    currentWeather?.let {
+                        Icon(
+                            painter = painterResource(WeatherIconProvider.getIconRes(currentWeather.conditionCode)),
+                            contentDescription = currentWeather.conditionText,
+                            modifier = modifier.size(32.dp),
+                            tint = WhiteColor
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.weight(0.1f))
-                Text(
-                    text = "${currentWeather.temperatureMetric}°",
-                    style = Typography.displayLarge
-                )
+                currentWeather?.let {
+                    Text(
+                        text = "${currentWeather.temperatureMetric}°",
+                        style = Typography.displayLarge
+                    )
+                }
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
@@ -104,8 +109,7 @@ fun CityCard(
                             style = Typography.bodyLarge,
                             color = GreyTextColor
                         )
-                    }
-                    else {
+                    } else {
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
                             stringResource(R.string.label_im_here),

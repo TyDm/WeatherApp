@@ -27,6 +27,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
@@ -73,6 +74,7 @@ import com.tydm.weatherApp.ui.mainScreen.components.WeatherDetails
 import com.tydm.weatherApp.ui.mainScreen.components.WeatherMain
 import com.tydm.weatherApp.ui.model.CityWeatherData
 import com.tydm.weatherApp.ui.theme.BackgroundDarkColor
+import com.tydm.weatherApp.ui.theme.GreyColor
 import com.tydm.weatherApp.ui.theme.Typography
 import com.tydm.weatherApp.ui.theme.WeatherAppTheme
 import kotlinx.coroutines.launch
@@ -102,7 +104,14 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
 
     BottomSheetScaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState, modifier = Modifier.navigationBarsPadding().imePadding()) },
+        snackbarHost = {
+            SnackbarHost(
+                snackBarHostState,
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .imePadding()
+            )
+        },
         scaffoldState = sheetScaffoldState,
         sheetContainerColor = Color.Transparent,
         sheetDragHandle = null,
@@ -120,7 +129,8 @@ fun MainScreen(
                     viewModel.handleIntent(MainScreenIntent.AddCity(locationKey = it))
                     scope.launch {
                         keyboardController?.hide()
-                        bottomSheetState.hide() }
+                        bottomSheetState.hide()
+                    }
                 },
                 onCityCardClick = {
                     scope.launch {
@@ -191,11 +201,11 @@ fun MainScreen(
                 pagerState = pagerState,
                 pullToRefreshState = pullToRefreshState,
                 refreshWeather = {
-                    viewModel.handleIntent(
-                        MainScreenIntent.UpdateWeather(
-                            viewModelState.cities[pagerState.currentPage].city.id
+                    viewModelState.cities.getOrNull(pagerState.currentPage)?.let { cityData ->
+                        viewModel.handleIntent(
+                            MainScreenIntent.UpdateWeather(cityData.city.id)
                         )
-                    )
+                    }
                 },
                 openSettings = { scope.launch { bottomSheetState.show(); } },
                 modifier = Modifier
@@ -237,92 +247,131 @@ private fun MainScreenWeather(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Bottom
             ) { page ->
-                val columnLazyListState = rememberLazyListState()
-                val snapFlingBehavior = rememberSnapFlingBehavior(
-                    lazyListState = columnLazyListState,
-                    snapPosition = SnapPosition.End
+                WeatherPage(
+                    state = state,
+                    page = page,
+                    pagerState = pagerState,
+                    pullToRefreshState = pullToRefreshState,
+                    refreshWeather = refreshWeather
                 )
-                if (state.cities[page].isLoading) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+            }
+        }
+        BottomBar(pagerState)
+    }
+}
 
-                    }
-                } else if (state.cities[page].currentWeather != null
+@Composable
+private fun WeatherPage(
+    state: MainScreenState,
+    page: Int,
+    pagerState: PagerState,
+    pullToRefreshState: PullToRefreshState,
+    refreshWeather: () -> Unit
+) {
+    val columnLazyListState = rememberLazyListState()
+    val snapFlingBehavior = rememberSnapFlingBehavior(
+        lazyListState = columnLazyListState,
+        snapPosition = SnapPosition.End
+    )
+
+    if (state.cities.isEmpty() || page >= state.cities.size) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = GreyColor)
+        }
+        return
+    }
+
+    if (state.cities[page].currentWeather == null) {
+        when (state.isLoading) {
+            true -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .imePadding(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        BoxWithConstraints(
-                            modifier = Modifier
-                                .weight(1f)
-                        ) {
-                            val boxHeight = remember() { mutableStateOf(this.maxHeight) }
-
-                            LaunchedEffect(pagerState.currentPage) {
-                                columnLazyListState.animateScrollToItem(0)
-                            }
-
-                            PullToRefreshBox(
-                                isRefreshing = state.isRefreshing,
-                                onRefresh = refreshWeather,
-                                state = pullToRefreshState,
-                                modifier = Modifier.align(Alignment.BottomCenter)
-                            ) {
-                                LazyColumn(
-                                    state = columnLazyListState,
-                                    flingBehavior = snapFlingBehavior,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                ) {
-                                    item {
-                                        Column(modifier = Modifier.height(boxHeight.value)) {
-                                            Spacer(modifier = Modifier.weight(1f))
-                                            WeatherMain(
-                                                city = state.cities[page].city,
-                                                weather = state.cities[page].currentWeather!!,
-                                                modifier = Modifier
-                                                    .padding(horizontal = 32.dp)
-                                            )
-                                            Spacer(modifier = Modifier.height(16.dp))
-                                        }
-                                    }
-                                    item {
-                                        HourlyForecastRow(
-                                            hourlyForecastList = state.cities[page].hourlyForecasts,
-                                            gmtOffset = state.cities[page].city.gmtOffset
-                                        )
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                    }
-                                    item {
-                                        DailyForecastColumn(
-                                            dailyForecastList = state.cities[page].dailyForecasts,
-                                            gmtOffset = state.cities[page].city.gmtOffset,
-                                            modifier = Modifier.padding(horizontal = 16.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        WeatherDetails(
-                            weather = state.cities[page].currentWeather!!,
-                            modifier = Modifier.padding(horizontal = 32.dp)
-                        )
-                    }
-                } else {
-                    ErrorScreen(
-                        state = state,
-                        refreshWeather = refreshWeather,
-                        pullToRefreshState = pullToRefreshState
-                    )
+                    CircularProgressIndicator(color = GreyColor)
                 }
             }
 
+            false -> {
+                ErrorScreen(
+                    state = state,
+                    refreshWeather = refreshWeather,
+                    pullToRefreshState = pullToRefreshState
+                )
+            }
         }
-        BottomBar(pagerState)
+        return
+    }
+
+    state.cities[page].currentWeather?.let { weather ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            BoxWithConstraints(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                val boxHeight = remember() { mutableStateOf(this.maxHeight) }
+
+                LaunchedEffect(pagerState.currentPage) {
+                    columnLazyListState.animateScrollToItem(0)
+                }
+
+                PullToRefreshBox(
+                    isRefreshing = state.isRefreshing,
+                    onRefresh = refreshWeather,
+                    state = pullToRefreshState,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    LazyColumn(
+                        state = columnLazyListState,
+                        flingBehavior = snapFlingBehavior,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        item {
+                            Column(modifier = Modifier.height(boxHeight.value)) {
+                                Spacer(modifier = Modifier.weight(1f))
+                                WeatherMain(
+                                    city = state.cities[page].city,
+                                    weather = weather,
+                                    modifier = Modifier
+                                        .padding(horizontal = 32.dp)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                        }
+                        item {
+                            HourlyForecastRow(
+                                hourlyForecastList = state.cities[page].hourlyForecasts,
+                                gmtOffset = state.cities[page].city.gmtOffset
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                        item {
+                            DailyForecastColumn(
+                                dailyForecastList = state.cities[page].dailyForecasts,
+                                gmtOffset = state.cities[page].city.gmtOffset,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            WeatherDetails(
+                weather = weather,
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+        }
     }
 }
 
@@ -353,7 +402,7 @@ private fun ErrorScreen(
     }
 }
 
-fun SheetState.currentOffset() = try {
+private fun SheetState.currentOffset() = try {
     this.requireOffset()
 } catch (_: IllegalStateException) {
     0f

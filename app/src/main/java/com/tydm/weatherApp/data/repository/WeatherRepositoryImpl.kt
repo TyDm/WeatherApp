@@ -80,8 +80,11 @@ class WeatherRepositoryImpl @Inject constructor(
         return try {
             val dailyForecastResponse = weatherApi.getDailyForecast(locationKey, language)
             if (dailyForecastResponse.body() == null) throw HttpException(dailyForecastResponse)
-            weatherDao.updateDailyForecast(cityId, dailyForecastResponse.body()!!.toDailyForecastEntityList(cityId))
-            
+            weatherDao.updateDailyForecast(
+                cityId,
+                dailyForecastResponse.body()!!.toDailyForecastEntityList(cityId)
+            )
+
             val currentWeatherResponse =
                 weatherApi.getCurrentWeather(locationKey, language)
             if (currentWeatherResponse.body() == null) throw HttpException(currentWeatherResponse)
@@ -89,14 +92,18 @@ class WeatherRepositoryImpl @Inject constructor(
                 cityId,
                 currentWeatherResponse.body()!!.toWeatherEntity(
                     cityId,
-                    dailyForecastResponse.body()!!.dailyForecasts?.firstOrNull()?.day?.precipitationProbability ?: 0
+                    dailyForecastResponse.body()!!.dailyForecasts?.firstOrNull()?.day?.precipitationProbability
+                        ?: 0
                 )
             )
-            
+
             val hourlyForecastResponse =
                 weatherApi.getHourlyForecast(locationKey, language)
             if (hourlyForecastResponse.body() == null) throw HttpException(hourlyForecastResponse)
-            weatherDao.updateHourlyForecast(cityId, hourlyForecastResponse.body()!!.toHourlyForecastEntityList(cityId))
+            weatherDao.updateHourlyForecast(
+                cityId,
+                hourlyForecastResponse.body()!!.toHourlyForecastEntityList(cityId)
+            )
 
             WeatherResult.Success(Unit)
         } catch (e: Exception) {
@@ -107,6 +114,7 @@ class WeatherRepositoryImpl @Inject constructor(
     override suspend fun deleteCity(id: Int): WeatherResult<Unit> {
         return try {
             weatherDao.deleteCity(id)
+            Log.i("WeatherRepositoryImpl", "Город с ID $id удален из базы данных")
             normalizeCityOrder()
             WeatherResult.Success(Unit)
         } catch (e: Exception) {
@@ -135,8 +143,12 @@ class WeatherRepositoryImpl @Inject constructor(
                     emit(WeatherResult.Success(weather))
                 }
         } catch (e: Exception) {
-            Log.e("WeatherRepositoryImpl", "Ошибка при получении текущей погоды", e)
-            emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
+            if (e is kotlinx.coroutines.CancellationException) {
+                emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
+            } else {
+                Log.e("WeatherRepositoryImpl", "Ошибка при получении текущей погоды", e)
+                emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
+            }
         }
     }
 
@@ -148,8 +160,12 @@ class WeatherRepositoryImpl @Inject constructor(
                     emit(WeatherResult.Success(forecast))
                 }
         } catch (e: Exception) {
-            Log.e("WeatherRepositoryImpl", "Ошибка при получении дневного прогноза", e)
-            emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
+            if (e is kotlinx.coroutines.CancellationException) {
+                emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
+            } else {
+                Log.e("WeatherRepositoryImpl", "Ошибка при получении дневного прогноза", e)
+                emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
+            }
         }
     }
 
@@ -161,8 +177,12 @@ class WeatherRepositoryImpl @Inject constructor(
                     emit(WeatherResult.Success(forecast))
                 }
         } catch (e: Exception) {
-            Log.e("WeatherRepositoryImpl", "Ошибка при получении почасового прогноза", e)
-            emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
+            if (e is kotlinx.coroutines.CancellationException) {
+                emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
+            } else {
+                Log.e("WeatherRepositoryImpl", "Ошибка при получении почасового прогноза", e)
+                emit(WeatherResult.Error(WeatherError.DatabaseError(e)))
+            }
         }
     }
 
@@ -170,13 +190,17 @@ class WeatherRepositoryImpl @Inject constructor(
         try {
             val searchCityResponse = weatherApi.getCitiesListByName(
                 cityName = query,
-                language = weatherLanguages.language)
+                language = weatherLanguages.language
+            )
             if (searchCityResponse.body() == null) {
-                Log.d("Exception","Exception on searchCity")
+                Log.d("Exception", "Exception on searchCity")
                 throw HttpException(searchCityResponse)
             }
             return WeatherResult.Success(searchCityResponse.body()!!.toSearchItemList())
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) {
+                return WeatherResult.Error(e.toWeatherError())
+            }
             Log.e("WeatherRepositoryImpl", "Ошибка при поиске города", e)
             return WeatherResult.Error(e.toWeatherError())
         }

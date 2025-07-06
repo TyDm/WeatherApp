@@ -73,9 +73,11 @@ fun SettingsSheet(
         )
         Spacer(modifier = Modifier.height(16.dp))
         when (isLoading) {
-            true -> Box(modifier = Modifier
-                .weight(0.5f)
-                .padding(top = 32.dp)) {
+            true -> Box(
+                modifier = Modifier
+                    .weight(0.5f)
+                    .padding(top = 32.dp)
+            ) {
                 CircularProgressIndicator(color = GreyColor)
             }
 
@@ -131,30 +133,26 @@ private fun CityCardList(
                     key = { _, cityWeatherData -> cityWeatherData.city.id }
                 )
                 { index, cityWeatherData ->
-
-                    cityWeatherData.currentWeather?.let {
-                        CityCard(
-                            city = cityWeatherData.city,
-                            index = index,
-                            currentWeather = cityWeatherData.currentWeather,
-                            onClickImHere = { onClickImHere(cityWeatherData.city.id) },
-                            onClickDelete = { onClickDelete(cityWeatherData.city.id) },
-                            modifier = Modifier
-                                .height(this@BoxWithConstraints.maxHeight / 3)
-                                .animateItem()
-                                .clickable { onItemClick(index) }
-                        )
-                    }
-
+                    CityCard(
+                        city = cityWeatherData.city,
+                        index = index,
+                        currentWeather = cityWeatherData.currentWeather,
+                        onClickImHere = { onClickImHere(cityWeatherData.city.id) },
+                        onClickDelete = { onClickDelete(cityWeatherData.city.id) },
+                        modifier = Modifier
+                            .height(this@BoxWithConstraints.maxHeight / 3)
+                            .animateItem()
+                            .clickable { onItemClick(index) }
+                    )
                 }
-
             }
         }
-    }
-    else {
+    } else {
         ErrorBox(
             text = stringResource(R.string.label_cities_not_found_add),
-            modifier = modifier.fillMaxSize().imePadding(),
+            modifier = modifier
+                .fillMaxSize()
+                .imePadding(),
             color = GreyTextColor
         )
     }
@@ -190,8 +188,11 @@ private fun SearchList(
     } else {
         ErrorBox(
             text = stringResource(R.string.label_cities_not_found),
-            modifier = modifier.fillMaxSize().imePadding(),
-            color = WhiteColor)
+            modifier = modifier
+                .fillMaxSize()
+                .imePadding(),
+            color = WhiteColor
+        )
     }
 }
 
@@ -206,10 +207,12 @@ private fun ErrorBox(
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(painter = painterResource(R.drawable.ic_city),
+            Icon(
+                painter = painterResource(R.drawable.ic_city),
                 tint = color,
                 contentDescription = null,
-                modifier = Modifier.size(128.dp))
+                modifier = Modifier.size(128.dp)
+            )
             Text(
                 text = text,
                 style = Typography.bodyLarge,

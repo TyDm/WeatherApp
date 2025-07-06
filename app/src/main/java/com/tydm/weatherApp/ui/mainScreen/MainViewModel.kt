@@ -153,13 +153,16 @@ class MainViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
             when (val result = addCityUseCase(locationKey)) {
                 is WeatherResult.Success -> {
+                    _state.update { it.copy(isLoading = false) }
                     _effect.value = MainScreenEffect.ScrollToCity(result.data)
                 }
 
                 is WeatherResult.Error -> {
                     Log.e("MainViewModel", "Ошибка при добавлении города: ${result.error}")
+                    _state.update { it.copy(isLoading = false) }
                     _effect.value = MainScreenEffect
                         .ShowError(errorMessageProvider.getMessage(result.error))
                 }
@@ -189,8 +192,8 @@ class MainViewModel @Inject constructor(
                 }
 
                 is WeatherResult.Error -> {
-                    Log.e("MainViewModel", "Ошибка поиска города: ${result.error}")
                     if (result.error.cause is kotlinx.coroutines.CancellationException) return@launch
+                    Log.e("MainViewModel", "Ошибка поиска города: ${result.error}")
                     _effect.value = MainScreenEffect
                         .ShowError(errorMessageProvider.getMessage(result.error))
                     _state.update {
