@@ -1,5 +1,6 @@
 package com.tydm.weatherApp.ui.mainScreen.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +35,7 @@ fun HourlyForecastRow(
     gmtOffset: Int,
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState(),
+    onItemClick: (HourlyForecast) -> Unit = {}
 ) {
     LazyRow(
         modifier = Modifier
@@ -47,7 +49,8 @@ fun HourlyForecastRow(
         itemsIndexed(hourlyForecastList) { index, forecast ->
             HourlyForecastItem(
                 hourlyForecast = forecast,
-                gmtOffset = gmtOffset
+                gmtOffset = gmtOffset,
+                onClick = { onItemClick(forecast) }
             )
             Spacer(modifier = Modifier.width(16.dp))
         }
@@ -59,10 +62,13 @@ private fun HourlyForecastItem(
     hourlyForecast: HourlyForecast,
     gmtOffset: Int,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Column(
-        modifier = Modifier.then(modifier),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .then(modifier),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val instant = java.time.Instant.ofEpochSecond(hourlyForecast.dateTime)
         val zoneId = ZoneId.of("GMT+$gmtOffset")
