@@ -1,5 +1,6 @@
 package com.tydm.weatherApp.ui.mainScreen.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,11 +29,13 @@ import com.tydm.weatherApp.ui.theme.WeatherAppTheme
 fun WeatherMain(
     city: City,
     weather: Weather,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .then(modifier)
     ) {
         ResizableText(

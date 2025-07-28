@@ -53,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
@@ -77,6 +78,7 @@ import com.tydm.weatherApp.ui.theme.BackgroundDarkColor
 import com.tydm.weatherApp.ui.theme.GreyColor
 import com.tydm.weatherApp.ui.theme.Typography
 import com.tydm.weatherApp.ui.theme.WeatherAppTheme
+import com.tydm.weatherApp.ui.util.openCustomTab
 import kotlinx.coroutines.launch
 
 @Composable
@@ -274,6 +276,8 @@ private fun WeatherPage(
         snapPosition = SnapPosition.End
     )
 
+    val context = LocalContext.current
+
     if (state.cities.isEmpty() || page >= state.cities.size) {
         Box(
             modifier = Modifier
@@ -345,7 +349,11 @@ private fun WeatherPage(
                                     city = state.cities[page].city,
                                     weather = weather,
                                     modifier = Modifier
-                                        .padding(horizontal = 32.dp)
+                                        .padding(horizontal = 32.dp),
+                                    onClick = {
+                                        val url = weather.mobileLink
+                                        if (url.isNotEmpty()) openCustomTab(context, url)
+                                    }
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                             }
@@ -353,7 +361,11 @@ private fun WeatherPage(
                         item {
                             HourlyForecastRow(
                                 hourlyForecastList = state.cities[page].hourlyForecasts,
-                                gmtOffset = state.cities[page].city.gmtOffset
+                                gmtOffset = state.cities[page].city.gmtOffset,
+                                onItemClick = { hourlyForecast ->
+                                    val url = hourlyForecast.mobileLink
+                                    if (url.isNotEmpty()) openCustomTab(context, url)
+                                },
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                         }
@@ -361,7 +373,11 @@ private fun WeatherPage(
                             DailyForecastColumn(
                                 dailyForecastList = state.cities[page].dailyForecasts,
                                 gmtOffset = state.cities[page].city.gmtOffset,
-                                modifier = Modifier.padding(horizontal = 16.dp)
+                                onItemClick = { dailyForecast ->
+                                    val url = dailyForecast.mobileLink
+                                    if (url.isNotEmpty()) openCustomTab(context, url)
+                                },
+                                modifier = Modifier.padding(horizontal = 16.dp),
                             )
                         }
                     }

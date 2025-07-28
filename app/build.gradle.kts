@@ -133,6 +133,8 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.okhttp)
 
+    implementation(libs.androidx.browser)
+
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     // Testing

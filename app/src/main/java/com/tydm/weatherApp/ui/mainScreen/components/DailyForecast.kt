@@ -1,6 +1,7 @@
 package com.tydm.weatherApp.ui.mainScreen.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,7 +39,8 @@ import java.util.Locale
 fun DailyForecastColumn(
     dailyForecastList: List<DailyForecast>,
     gmtOffset: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onItemClick: (dailyForecast: DailyForecast) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -48,7 +50,8 @@ fun DailyForecastColumn(
         dailyForecastList.forEachIndexed { index, item ->
             DailyForecastItem(
                 dailyForecast = item,
-                gmtOffset = gmtOffset
+                gmtOffset = gmtOffset,
+                onClick = { onItemClick(item) }
             )
             if (index != dailyForecastList.lastIndex) {
                 HorizontalDivider(color = GreyColor)
@@ -61,7 +64,8 @@ fun DailyForecastColumn(
 private fun DailyForecastItem(
     dailyForecast: DailyForecast,
     gmtOffset: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     val today = LocalDate.now()
     val instant = java.time.Instant.ofEpochSecond(dailyForecast.date)
@@ -89,12 +93,15 @@ private fun DailyForecastItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp)
+            .clickable(onClick = onClick)
             .then(modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier
-            .weight(1f)
-            .padding(end = 8.dp)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 8.dp)
+        ) {
             Text(
                 text = dayOfWeekText,
                 style = Typography.bodyLarge,
